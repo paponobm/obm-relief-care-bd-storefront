@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { CouponPill } from "@/components/coupon-pill";
-import { getCategories, getProducts } from "@/lib/store";
+import { getCategories, getChannelConfig, getProducts } from "@/lib/store";
 import { CATEGORY_ICON } from "@/lib/category-icon";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, featured, all] = await Promise.all([
+  const [categories, featured, all, channel] = await Promise.all([
     getCategories(),
     getProducts({ featured: true, limit: 8 }),
     getProducts({ limit: 12 }),
+    getChannelConfig().catch(() => null),
   ]);
 
   return (
@@ -27,9 +28,11 @@ export default async function HomePage() {
         <p className="relative z-10 mt-2 max-w-[44ch] opacity-90">
           বিশ্বস্ত ব্র্যান্ডের আসল পণ্য। পণ্য হাতে পেয়ে টাকা দিন, সারা বাংলাদেশে হোম ডেলিভারি।
         </p>
-        <div className="relative z-10 mt-4">
-          <CouponPill label="প্রথম অর্ডারে ১০% ছাড়" code="RELIEF10" />
-        </div>
+        {channel?.heroCoupon && (
+          <div className="relative z-10 mt-4">
+            <CouponPill label={channel.heroCoupon.label} code={channel.heroCoupon.code} />
+          </div>
+        )}
       </section>
 
       <Link

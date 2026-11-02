@@ -11,6 +11,7 @@ export const SOCIAL_LINKS: { name: string; url: string }[] = [];
 export interface ChannelConfig {
   name: string;
   logoUrl: string | null;
+  heroCoupon: { label: string; code: string } | null;
 }
 
 export async function getChannelConfig(): Promise<ChannelConfig> {
