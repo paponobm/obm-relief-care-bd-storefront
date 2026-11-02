@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
-import { CouponPill } from "@/components/coupon-pill";
+import { HeroBanner } from "@/components/hero-banner";
 import { getCategories, getChannelConfig, getProducts } from "@/lib/store";
 import { CATEGORY_ICON } from "@/lib/category-icon";
 
@@ -16,24 +16,12 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <section className="relative overflow-hidden rounded-card bg-[var(--hero-bg)] p-7 text-white lg:p-9">
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -right-[60px] -top-[60px] h-60 w-60 rounded-full border-[28px] border-[color-mix(in_srgb,var(--amber)_55%,transparent)]"
-          style={{ borderLeftColor: "transparent", borderBottomColor: "transparent" }}
-        />
-        <h1 className="font-display relative z-10 max-w-[16ch] font-bold text-3xl leading-tight sm:text-4xl">
-          ব্যথা, চুলকানি, সর্দি থেকে <span className="text-amber">দ্রুত আরাম</span>
-        </h1>
-        <p className="relative z-10 mt-2 max-w-[44ch] opacity-90">
-          বিশ্বস্ত ব্র্যান্ডের আসল পণ্য। পণ্য হাতে পেয়ে টাকা দিন, সারা বাংলাদেশে হোম ডেলিভারি।
-        </p>
-        {channel?.heroCoupon && (
-          <div className="relative z-10 mt-4">
-            <CouponPill label={channel.heroCoupon.label} code={channel.heroCoupon.code} />
-          </div>
-        )}
-      </section>
+      <HeroBanner
+        defaultTitle="ব্যথা, চুলকানি, সর্দি থেকে দ্রুত আরাম"
+        defaultDescription="বিশ্বস্ত ব্র্যান্ডের আসল পণ্য। পণ্য হাতে পেয়ে টাকা দিন, সারা বাংলাদেশে হোম ডেলিভারি।"
+        defaultCoupon={channel?.heroCoupon ?? null}
+        slides={channel?.heroSlides ?? []}
+      />
 
       <Link
         href="/quiz"

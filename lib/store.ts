@@ -8,10 +8,18 @@ export const STORE_NAME = "Relief Care bd";
 export const WHATSAPP_NUMBER = ""; // e.g. "8801XXXXXXXXX"
 export const SOCIAL_LINKS: { name: string; url: string }[] = [];
 
+export interface HeroSlide {
+  image: string;
+  title?: string;
+  description?: string;
+  coupon?: { label: string; code: string } | null;
+}
+
 export interface ChannelConfig {
   name: string;
   logoUrl: string | null;
   heroCoupon: { label: string; code: string } | null;
+  heroSlides: HeroSlide[];
 }
 
 export async function getChannelConfig(): Promise<ChannelConfig> {

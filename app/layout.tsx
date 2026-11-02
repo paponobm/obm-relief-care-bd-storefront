@@ -15,7 +15,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Falls back to the hardcoded name + no logo if the API is briefly
   // unreachable — a layout-level fetch failure would otherwise take down
   // every page, not just one route.
-  const channel = await getChannelConfig().catch(() => ({ name: STORE_NAME, logoUrl: null, heroCoupon: null }));
+  const channel = await getChannelConfig().catch(() => ({
+    name: STORE_NAME,
+    logoUrl: null,
+    heroCoupon: null,
+    heroSlides: [],
+  }));
 
   return (
     <html lang="bn">
