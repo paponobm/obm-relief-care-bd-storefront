@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
+import type { ChannelConfig } from "@/lib/store";
 import { ThemeToggle } from "./theme-toggle";
 
-export function Header() {
+export function Header({ channel }: { channel: ChannelConfig }) {
   const { count } = useCart();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -17,41 +18,82 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface">
+    <header className="sticky mt-2 top-0 z-40 border-b border-line bg-surface">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2.5 xl:px-8">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-leaf text-sm font-bold text-white">RC</span>
-          <span className="font-display text-lg leading-none text-leaf-deep">
-            Relief Care <span className="text-amber">bd</span>
-          </span>
-        </Link>
+        <div className="flex shrink-0 items-center gap-3 lg:flex-1">
+          {/* Not wired up yet — side menu comes in a later step. */}
+          <button
+            type="button"
+            aria-label="মেনু"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-bg text-ink"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
+              <path d="M4 7h16M4 12h10M4 17h16" />
+            </svg>
+          </button>
 
-        <form onSubmit={onSearch} className="order-3 min-w-0 flex-1 basis-full sm:order-none sm:basis-auto lg:max-w-md">
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="পণ্য বা সমস্যা লিখে খুঁজুন"
-            className="w-full rounded-full border border-line bg-bg px-4 py-2 text-sm text-ink outline-none focus:border-leaf"
-          />
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            {channel.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded logo
+              <img src={channel.logoUrl} alt={channel.name} className="h-12 w-12 rounded-full bg-white object-contain p-0.5" />
+            ) : (
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-leaf text-base font-bold text-white">
+                {channel.name.slice(0, 2).toUpperCase()}
+              </span>
+            )}
+            <span className="leading-tight">
+              <span className="font-bold block text-2xl leading-none text-leaf-deep">
+                Relief Care <span className="text-amber">bd</span>
+              </span>
+              <span className="mt-1 block text-xs tracking-wide text-muted">আরামের বিশ্বস্ত ঠিকানা</span>
+            </span>
+          </Link>
+        </div>
+
+        <form onSubmit={onSearch} className="order-3 min-w-0 basis-full lg:order-none lg:basis-auto lg:w-full lg:max-w-md">
+          <div className="relative">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="পণ্য বা সমস্যা লিখে খুঁজুন (যেমন: দাদ, ব্যথা)"
+              className="w-full rounded-full border border-line bg-bg py-2.5 pl-10 pr-4 text-sm text-ink outline-none focus:border-leaf"
+            />
+          </div>
         </form>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0 lg:flex-1 lg:justify-end">
           <ThemeToggle />
           <Link
             href="/checkout"
-            className="flex items-center gap-2 rounded-full bg-amber px-4 py-2 text-sm font-semibold text-white"
+            className="relative flex items-center gap-2 rounded-full bg-amber px-4 py-2.5 text-sm font-semibold text-white"
           >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 7h12l-1 13H7L6 7Z" />
+              <path d="M9 7a3 3 0 0 1 6 0" />
+            </svg>
             কার্ট
             {count > 0 && (
-              <span className="num grid h-5 min-w-5 place-items-center rounded-full bg-leaf-deep px-1.5 text-xs">
+              <span className="num absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-leaf px-1 text-xs text-white">
                 {count}
               </span>
             )}
           </Link>
         </div>
       </div>
-      <nav className="scrollbar-none mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-2.5 text-sm xl:px-8">
+      {/* <nav className="scrollbar-none mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-2.5 text-sm xl:px-8">
         <Link href="/" className="shrink-0 rounded-full border border-line px-3 py-1 font-medium text-ink">
           হোম
         </Link>
@@ -64,7 +106,7 @@ export function Header() {
         <Link href="/track" className="shrink-0 rounded-full border border-line px-3 py-1 font-medium text-ink">
           অর্ডার ট্র্যাকিং
         </Link>
-      </nav>
+      </nav> */}
     </header>
   );
 }

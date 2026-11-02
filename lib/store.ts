@@ -8,6 +8,17 @@ export const STORE_NAME = "Relief Care bd";
 export const WHATSAPP_NUMBER = ""; // e.g. "8801XXXXXXXXX"
 export const SOCIAL_LINKS: { name: string; url: string }[] = [];
 
+export interface ChannelConfig {
+  name: string;
+  logoUrl: string | null;
+}
+
+export async function getChannelConfig(): Promise<ChannelConfig> {
+  const res = await fetch(`${API_URL}/store/${CHANNEL_SLUG}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Request failed (${res.status})`);
+  return res.json() as Promise<ChannelConfig>;
+}
+
 export interface PublicProduct {
   productId: string;
   name: string;

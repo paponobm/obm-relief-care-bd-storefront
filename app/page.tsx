@@ -52,9 +52,9 @@ export default async function HomePage() {
             <Link
               key={c.id}
               href={`/products?category=${c.id}`}
-              className="flex flex-col items-center gap-2.5 rounded-card border border-line bg-surface p-4 text-center text-xs font-semibold text-ink transition-shadow hover:shadow-md"
+              className="flex flex-col items-center gap-1.5 rounded-card bg-surface px-2.5 py-3.5 text-center text-sm font-semibold leading-[1.3] text-ink transition-transform hover:-translate-y-0.5"
             >
-              <span className="grid h-14 w-14 place-items-center rounded-full bg-leaf-soft text-2xl text-leaf">
+              <span className="grid h-[52px] w-[52px] place-items-center rounded-full bg-leaf-soft text-xl text-leaf">
                 {CATEGORY_ICON[c.name] ?? "●"}
               </span>
               {c.name}
