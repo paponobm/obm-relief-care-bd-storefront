@@ -18,6 +18,10 @@
   --muted: #5e6e62;
   --danger: #c62f2f;
   --danger-soft: #fdeaea;
+  /* The hero banner uses its own dark value, not --leaf-deep — that token
+     flips to a light mint in dark mode (made for text on a dark surface,
+     not for use as a background fill). */
+  --hero-bg: #155c2b;
   color-scheme: light;
 }
 
@@ -38,6 +42,7 @@
     --muted: #9db0a2;
     --danger: #ff7b7b;
     --danger-soft: #3a1414;
+    --hero-bg: #123f21;
     color-scheme: dark;
   }
 }
@@ -56,6 +61,7 @@
   --muted: #9db0a2;
   --danger: #ff7b7b;
   --danger-soft: #3a1414;
+  --hero-bg: #123f21;
   color-scheme: dark;
 }
 

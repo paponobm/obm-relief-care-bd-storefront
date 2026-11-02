@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
+import { CouponPill } from "@/components/coupon-pill";
 import { getCategories, getProducts } from "@/lib/store";
 import { CATEGORY_ICON } from "@/lib/category-icon";
 
@@ -14,36 +15,39 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <section className="relative overflow-hidden rounded-card bg-leaf-deep p-7 text-white lg:p-9">
-          <h1 className="font-display max-w-[16ch] text-3xl leading-tight sm:text-4xl">
-            ব্যথা, চুলকানি, সর্দি থেকে <span className="text-amber-soft">দ্রুত আরাম</span>
-          </h1>
-          <p className="mt-2 max-w-[44ch] opacity-90">
-            বিশ্বস্ত ব্র্যান্ডের আসল পণ্য, ক্যাশ অন ডেলিভারিতে সারা বাংলাদেশে।
-          </p>
-          <Link href="/products" className="mt-4 inline-block rounded-full bg-amber px-5 py-2.5 font-semibold">
-            কেনাকাটা শুরু করুন →
-          </Link>
-        </section>
+      <section className="relative overflow-hidden rounded-card bg-[var(--hero-bg)] p-7 text-white lg:p-9">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-[60px] -top-[60px] h-60 w-60 rounded-full border-[28px] border-[color-mix(in_srgb,var(--amber)_55%,transparent)]"
+          style={{ borderLeftColor: "transparent", borderBottomColor: "transparent" }}
+        />
+        <h1 className="font-display relative z-10 max-w-[16ch] font-bold text-3xl leading-tight sm:text-4xl">
+          ব্যথা, চুলকানি, সর্দি থেকে <span className="text-amber">দ্রুত আরাম</span>
+        </h1>
+        <p className="relative z-10 mt-2 max-w-[44ch] opacity-90">
+          বিশ্বস্ত ব্র্যান্ডের আসল পণ্য। পণ্য হাতে পেয়ে টাকা দিন, সারা বাংলাদেশে হোম ডেলিভারি।
+        </p>
+        <div className="relative z-10 mt-4">
+          <CouponPill label="প্রথম অর্ডারে ১০% ছাড়" code="RELIEF10" />
+        </div>
+      </section>
 
-        <Link
-          href="/quiz"
-          className="flex flex-col justify-center gap-3 rounded-card border border-leaf bg-leaf-soft p-5 text-ink lg:p-7"
-        >
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-leaf text-white">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01" />
-            </svg>
-          </span>
-          <span>
-            <b className="font-display block text-lg text-leaf-deep">কোনটা নেবেন বুঝছেন না?</b>
-            <span className="text-sm text-muted">৩টা প্রশ্নের উত্তর দিন, আমরা ঠিক পণ্যটা খুঁজে দেব</span>
-          </span>
-          <span className="font-semibold text-leaf">শুরু করুন →</span>
-        </Link>
-      </div>
+      <Link
+        href="/quiz"
+        className="flex w-full items-center gap-3.5 rounded-card border border-leaf bg-leaf-soft p-4 text-left text-ink"
+      >
+        <span className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full bg-leaf text-white">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01" />
+          </svg>
+        </span>
+        <span>
+          <b className="font-display block text-lg leading-tight text-leaf-deep">কোনটা নেবেন বুঝছেন না?</b>
+          <span className="text-sm text-muted">৩টা প্রশ্নের উত্তর দিন, আমরা ঠিক পণ্যটা খুঁজে দেব</span>
+        </span>
+        <span className="ml-auto hidden shrink-0 font-semibold text-leaf sm:block">শুরু করুন →</span>
+      </Link>
 
       <section>
         <h2 className="font-display mb-3 text-xl">ক্যাটাগরি</h2>
