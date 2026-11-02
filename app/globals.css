@@ -1,0 +1,85 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --leaf: #1f7a3a;
+  --leaf-deep: #155c2b;
+  --leaf-soft: #e6f2e8;
+  --amber: #f08a12;
+  --amber-deep: #c96a00;
+  --amber-soft: #fff1df;
+  --bg: #f5f7f2;
+  --surface: #ffffff;
+  --line: #dfe6da;
+  --ink: #1b2a1f;
+  --muted: #5e6e62;
+  --danger: #c62f2f;
+  --danger-soft: #fdeaea;
+  color-scheme: light;
+}
+
+/* Follows the OS/browser preference unless the user picked a theme explicitly
+   (data-theme set by the toggle below overrides this). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --leaf: #4cbb6a;
+    --leaf-deep: #7ad592;
+    --leaf-soft: #18301f;
+    --amber: #ffa23a;
+    --amber-deep: #ffb862;
+    --amber-soft: #3a2810;
+    --bg: #0f1712;
+    --surface: #17221a;
+    --line: #2a3a2e;
+    --ink: #e8f0e9;
+    --muted: #9db0a2;
+    --danger: #ff7b7b;
+    --danger-soft: #3a1414;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --leaf: #4cbb6a;
+  --leaf-deep: #7ad592;
+  --leaf-soft: #18301f;
+  --amber: #ffa23a;
+  --amber-deep: #ffb862;
+  --amber-soft: #3a2810;
+  --bg: #0f1712;
+  --surface: #17221a;
+  --line: #2a3a2e;
+  --ink: #e8f0e9;
+  --muted: #9db0a2;
+  --danger: #ff7b7b;
+  --danger-soft: #3a1414;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: "Hind Siliguri", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.font-display {
+  font-family: "Baloo Da 2", "Hind Siliguri", system-ui, sans-serif;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
