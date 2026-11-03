@@ -65,7 +65,7 @@ export default async function HomePage() {
 
       {featured.items.length > 0 && (
         <section>
-          <div className="mb-3 flex items-baseline justify-between">
+          <div className="mb-3 mt-10 flex items-baseline justify-between">
             <h2 className="font-display text-xl">
               আমাদের <span className="text-amber">পছন্দ</span>
             </h2>

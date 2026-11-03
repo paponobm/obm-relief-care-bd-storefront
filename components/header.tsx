@@ -25,9 +25,9 @@ export function Header({ channel }: { channel: ChannelConfig }) {
           <button
             type="button"
             aria-label="মেনু"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-bg text-ink"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-bg text-ink"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
               <path d="M4 7h16M4 12h10M4 17h16" />
             </svg>
           </button>
@@ -35,17 +35,17 @@ export function Header({ channel }: { channel: ChannelConfig }) {
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             {channel.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded logo
-              <img src={channel.logoUrl} alt={channel.name} className="h-12 w-12 rounded-full bg-white object-contain p-0.5" />
+              <img src={channel.logoUrl} alt={channel.name} className="h-10 w-10 rounded-full  object-contain p-0.5" />
             ) : (
               <span className="grid h-11 w-11 place-items-center rounded-full bg-leaf text-base font-bold text-white">
                 {channel.name.slice(0, 2).toUpperCase()}
               </span>
             )}
             <span className="leading-tight">
-              <span className="font-bold block text-2xl leading-none text-leaf-deep">
+              <span className="font-bold block text-xl leading-none text-leaf-deep">
                 Relief Care <span className="text-amber">bd</span>
               </span>
-              <span className="mt-1 block text-xs tracking-wide text-muted">আরামের বিশ্বস্ত ঠিকানা</span>
+              <span className="hidden sm:block mt-1 block text-xs tracking-wide text-muted">আরামের বিশ্বস্ত ঠিকানা</span>
             </span>
           </Link>
         </div>
