@@ -1,4 +1,9 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+// export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+
+ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
+
+
+
 export const CHANNEL_SLUG = "relief-care-bd";
 
 export const STORE_NAME = "Relief Care bd";
