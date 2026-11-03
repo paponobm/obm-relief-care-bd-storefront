@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { HeroBanner } from "@/components/hero-banner";
 import { TrustStrip } from "@/components/trust-strip";
+import { ComboBanner } from "@/components/combo-banner";
 import { getCategories, getChannelConfig, getProducts } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -41,19 +42,21 @@ export default async function HomePage() {
             <Link
               key={c.id}
               href={`/products?category=${c.id}`}
-              className={`flex flex-col items-center gap-1.5 rounded-card bg-surface px-2.5 py-3.5 text-center text-sm font-semibold leading-[1.3] text-ink transition-transform hover:-translate-y-0.5 ${
-                i >= 8 ? "hidden sm:flex" : ""
-              }`}
+              // className={`flex flex-col items-center gap-1.5 rounded-card bg-surface px-2.5 py-3.5 text-center text-sm font-semibold leading-[1.3] text-ink transition-transform hover:-translate-y-0.5 ${
+              //   i >= 8 ? "hidden sm:flex" : ""
+              // }`}
+              className={`flex flex-col items-center gap-1.5 rounded-card sm:bg-surface px-2.5 py-3.5 text-center text-sm font-semibold leading-[1.3] text-ink sm:transition-transform hover:-translate-y-0.5 ${i >= 8 ? "hidden sm:flex" : ""
+                }`}
             >
               {c.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, not part of the Next.js image pipeline
                 <img
                   src={c.imageUrl}
                   alt={c.name}
-                  className="h-[52px] w-[52px] rounded-full object-cover"
+                  className="h-[52px] w-[52px] rounded-card object-cover"
                 />
               ) : (
-                <span className="grid h-[52px] w-[52px] place-items-center rounded-full bg-leaf-soft text-xl font-bold text-leaf">
+                <span className="grid h-[52px] w-[52px] place-items-center rounded-card bg-leaf-soft text-xl font-bold text-leaf">
                   {c.name.charAt(0)}
                 </span>
               )}
@@ -62,6 +65,8 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      <ComboBanner config={channel?.comboBanner ?? null} />
 
       {featured.items.length > 0 && (
         <section>
@@ -98,7 +103,7 @@ export default async function HomePage() {
 
       <section className="rounded-card border border-dashed border-amber bg-amber-soft p-4 text-sm text-ink">
         <b className="font-display block text-base text-amber-deep">শীঘ্রই আসছে</b>
-        নিজের কম্বো বানানো, কুপন কোড, রেফারেল বোনাস, VIP কার্ড, এবং কাস্টমার রিভিউ — এই ফিচারগুলো নিয়ে আমরা কাজ করছি।
+        কুপন কোড, রেফারেল বোনাস, VIP কার্ড, এবং কাস্টমার রিভিউ — এই ফিচারগুলো নিয়ে আমরা কাজ করছি।
       </section>
     </div>
   );

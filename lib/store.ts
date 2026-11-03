@@ -25,12 +25,25 @@ export interface TrustBadge {
   icon: string;
 }
 
+export interface ComboTier {
+  title: string;
+  description: string;
+}
+
+export interface ComboBannerConfig {
+  newBadge: boolean;
+  title: string;
+  description: string;
+  tiers: ComboTier[];
+}
+
 export interface ChannelConfig {
   name: string;
   logoUrl: string | null;
   heroCoupon: { label: string; code: string } | null;
   heroSlides: HeroSlide[];
   trustBadges: TrustBadge[];
+  comboBanner: ComboBannerConfig | null;
 }
 
 export async function getChannelConfig(): Promise<ChannelConfig> {

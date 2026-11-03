@@ -67,7 +67,7 @@ export function HeroBanner({
         style={{ borderLeftColor: "transparent", borderBottomColor: "transparent" }}
       />
 
-      <h1 className="font-display relative z-10 max-w-[16ch] font-bold text-3xl leading-tight sm:text-4xl">
+      <h1 className="font-display relative z-10 max-w-[16ch] font-bold text-2xl leading-tight sm:text-4xl">
         <TitleText text={title} />
       </h1>
       <p className="relative z-10 mt-2 max-w-[44ch] opacity-90">{description}</p>
