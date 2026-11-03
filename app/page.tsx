@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { HeroBanner } from "@/components/hero-banner";
+import { TrustStrip } from "@/components/trust-strip";
 import { getCategories, getChannelConfig, getProducts } from "@/lib/store";
-import { CATEGORY_ICON } from "@/lib/category-icon";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-4">
       <HeroBanner
         defaultTitle="ব্যথা, চুলকানি, সর্দি থেকে দ্রুত আরাম"
         defaultDescription="বিশ্বস্ত ব্র্যান্ডের আসল পণ্য। পণ্য হাতে পেয়ে টাকা দিন, সারা বাংলাদেশে হোম ডেলিভারি।"
@@ -23,35 +23,40 @@ export default async function HomePage() {
         slides={channel?.heroSlides ?? []}
       />
 
-      <Link
-        href="/quiz"
-        className="flex w-full items-center gap-3.5 rounded-card border border-leaf bg-leaf-soft p-4 text-left text-ink"
-      >
-        <span className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full bg-leaf text-white">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01" />
-          </svg>
-        </span>
-        <span>
-          <b className="font-display block text-lg leading-tight text-leaf-deep">কোনটা নেবেন বুঝছেন না?</b>
-          <span className="text-sm text-muted">৩টা প্রশ্নের উত্তর দিন, আমরা ঠিক পণ্যটা খুঁজে দেব</span>
-        </span>
-        <span className="ml-auto hidden shrink-0 font-semibold text-leaf sm:block">শুরু করুন →</span>
-      </Link>
+      <TrustStrip badges={channel?.trustBadges ?? []} />
 
       <section>
-        <h2 className="font-display mb-3 text-xl">ক্যাটাগরি</h2>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-          {categories.map((c) => (
+        <div className="mb-3 mt-8 flex items-baseline justify-between">
+          <h2 className="font-bold tx text-2xl">ক্যাটাগরি</h2>
+          <Link href="/products" className="font-semibold text-leaf">
+            সব পণ্য →
+          </Link>
+        </div>
+        {/* Capped to 10 — small screens (grid-cols-4) show the first 8 as
+            2 rows, larger screens (grid-cols-5) reveal all 10 as 2 rows.
+            Anything beyond 10 isn't shown here at all; browse the rest from
+            সব পণ্য instead of growing this grid past 2 rows. */}
+        <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
+          {categories.slice(0, 10).map((c, i) => (
             <Link
               key={c.id}
               href={`/products?category=${c.id}`}
-              className="flex flex-col items-center gap-1.5 rounded-card bg-surface px-2.5 py-3.5 text-center text-sm font-semibold leading-[1.3] text-ink transition-transform hover:-translate-y-0.5"
+              className={`flex flex-col items-center gap-1.5 rounded-card bg-surface px-2.5 py-3.5 text-center text-sm font-semibold leading-[1.3] text-ink transition-transform hover:-translate-y-0.5 ${
+                i >= 8 ? "hidden sm:flex" : ""
+              }`}
             >
-              <span className="grid h-[52px] w-[52px] place-items-center rounded-full bg-leaf-soft text-xl text-leaf">
-                {CATEGORY_ICON[c.name] ?? "●"}
-              </span>
+              {c.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded, not part of the Next.js image pipeline
+                <img
+                  src={c.imageUrl}
+                  alt={c.name}
+                  className="h-[52px] w-[52px] rounded-full object-cover"
+                />
+              ) : (
+                <span className="grid h-[52px] w-[52px] place-items-center rounded-full bg-leaf-soft text-xl font-bold text-leaf">
+                  {c.name.charAt(0)}
+                </span>
+              )}
               {c.name}
             </Link>
           ))}

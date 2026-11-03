@@ -20,11 +20,17 @@ export interface HeroSlide {
   coupon?: { label: string; code: string } | null;
 }
 
+export interface TrustBadge {
+  text: string;
+  icon: string;
+}
+
 export interface ChannelConfig {
   name: string;
   logoUrl: string | null;
   heroCoupon: { label: string; code: string } | null;
   heroSlides: HeroSlide[];
+  trustBadges: TrustBadge[];
 }
 
 export async function getChannelConfig(): Promise<ChannelConfig> {
@@ -53,6 +59,7 @@ export interface PublicCategory {
   name: string;
   slug: string;
   parentId: string | null;
+  imageUrl: string | null;
 }
 
 export interface ProductPage {
@@ -75,26 +82,11 @@ async function getJson<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// The backend's category list is global (not scoped per channel), so it can
-// include other storefronts' categories too. RELIEF_CATEGORY_SLUGS below is
-// this storefront's own known set — see getCategories().
-export const RELIEF_CATEGORY_SLUGS = [
-  "solution-kits",
-  "pain-relief",
-  "skin-care",
-  "cold-flu",
-  "oral-care",
-  "hair-care",
-  "foot-care",
-  "baby-mother-care",
-  "herbal-wellness",
-  "combo-offers",
-] as const;
-
-export async function getCategories(): Promise<PublicCategory[]> {
-  const all = await getJson<PublicCategory[]>("/categories");
-  const known = new Set<string>(RELIEF_CATEGORY_SLUGS);
-  return all.filter((c) => known.has(c.slug));
+// The backend's category list is global (not scoped per channel), but this
+// channel's own subset is curated server-side (Settings → Badge & Category →
+// categorySlugs) and this endpoint already returns just that subset.
+export function getCategories(): Promise<PublicCategory[]> {
+  return getJson<PublicCategory[]>("/categories");
 }
 
 export function getProducts(

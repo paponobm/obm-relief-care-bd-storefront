@@ -20,6 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     logoUrl: null,
     heroCoupon: null,
     heroSlides: [],
+    trustBadges: [],
   }));
 
   return (
