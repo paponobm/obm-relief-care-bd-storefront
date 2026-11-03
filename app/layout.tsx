@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     heroCoupon: null,
     heroSlides: [],
     trustBadges: [],
-    comboBanner: null,
+    comboBanners: [],
   }));
 
   return (

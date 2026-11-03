@@ -66,7 +66,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <ComboBanner config={channel?.comboBanner ?? null} />
+      <ComboBanner configs={channel?.comboBanners ?? []} />
 
       {featured.items.length > 0 && (
         <section>

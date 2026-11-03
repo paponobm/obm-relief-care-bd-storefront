@@ -6,13 +6,11 @@ import type { ComboBannerConfig } from "@/lib/store";
 // Home Page Combo), no hardcoded fallback: unset means it doesn't render.
 // The combo builder itself isn't built yet, so this links to a "coming
 // soon" page rather than faking the interactive flow.
-export function ComboBanner({ config }: { config: ComboBannerConfig | null }) {
-  if (!config) return null;
-
+function ComboBannerCard({ config }: { config: ComboBannerConfig }) {
   return (
     <Link
       href="/combo"
-      className="relative mt-[22px] flex flex-col gap-3 overflow-hidden rounded-[20px] border-[1.5px] border-amber bg-amber-soft p-[18px] text-left text-ink"
+      className="relative flex h-full flex-col gap-3 overflow-hidden rounded-[20px] border-[1.5px] border-amber bg-amber-soft p-[18px] text-left text-ink"
     >
       <span
         aria-hidden
@@ -34,15 +32,40 @@ export function ComboBanner({ config }: { config: ComboBannerConfig | null }) {
           {config.tiers.map((tier, i) => (
             <span key={i} className="flex flex-col rounded-xl bg-surface p-2 text-xs leading-[1.3] text-muted">
               <b className="font-display text-base text-ink">{tier.title}</b>
-              {tier.description}
+              {/* Each admin-entered line (split on \n) renders as its own
+                  line — a plain {tier.description} would collapse them. */}
+              {tier.description.split("\n").map((line, li) => (
+                <span key={li}>{line}</span>
+              ))}
             </span>
           ))}
         </span>
       )}
 
-      <span className="relative rounded-xl bg-amber p-[11px] text-center font-bold text-white">
+      <span className="relative mt-auto rounded-xl bg-amber p-[11px] text-center font-bold text-white">
         কম্বো বানানো শুরু করুন →
       </span>
     </Link>
+  );
+}
+
+// One combo (today) renders full-width exactly as before; two combos sit
+// side by side from `sm:` up and stack on mobile — layout only changes once
+// there's actually a second one to show.
+export function ComboBanner({ configs }: { configs: ComboBannerConfig[] }) {
+  if (configs.length === 0) return null;
+  if (configs.length === 1) {
+    return (
+      <div className="mt-[22px]">
+        <ComboBannerCard config={configs[0]} />
+      </div>
+    );
+  }
+  return (
+    <div className="mt-[22px] grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {configs.map((config, i) => (
+        <ComboBannerCard key={i} config={config} />
+      ))}
+    </div>
   );
 }
