@@ -49,7 +49,12 @@ export default async function ProductPage({ params }: { params: { slug: string }
               </>
             ) : null}
           </div>
-          {product.description && <p className="whitespace-pre-line text-sm text-muted">{product.description}</p>}
+          {product.description && (
+            <div
+              className="rich-content text-sm text-muted"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+          )}
           <AddToCart product={product} />
           <ul className="mt-2 flex flex-col gap-1 text-sm text-muted">
             <li>১০০% আসল, সিল করা প্যাকেট</li>

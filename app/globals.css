@@ -103,3 +103,33 @@ body {
 .animate-marquee {
   animation: marquee 18s linear infinite;
 }
+
+/* Renders the admin's rich-text product description (Full Description
+   editor) — minimal styling since Tailwind's base reset strips default
+   heading/list/link appearance. */
+.rich-content h2 {
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  font-family: "Baloo Da 2", "Hind Siliguri", system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.rich-content p {
+  margin-bottom: 0.5rem;
+}
+.rich-content ul {
+  margin: 0.25rem 0 0.5rem 1.25rem;
+  list-style: disc;
+}
+.rich-content a {
+  color: var(--leaf-deep);
+  text-decoration: underline;
+}
+.rich-content img {
+  margin: 0.5rem 0;
+  border-radius: 0.75rem;
+  max-width: 100%;
+}
+.rich-content strong {
+  font-weight: 700;
+}
