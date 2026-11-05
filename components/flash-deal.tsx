@@ -87,11 +87,17 @@ function FlashDealCard({ product }: { product: PublicProduct }) {
         )}
 
         {product.hasVariants ? (
+          // Outlined, not filled — deliberately distinct from the solid
+          // green add-to-cart button (MiniAddToCart) below, since picking a
+          // variant isn't a one-tap add.
           <Link
             href={`/product/${product.slug}`}
-            className="block w-full rounded-lg bg-leaf py-2 text-center text-xs font-semibold text-white"
+            className="block w-full rounded-lg border border-leaf bg-transparent py-1.5 text-center text-md font-semibold text-leaf"
           >
-            বাছুন
+            {product.variantOptionLabel
+              ? `${bn(product.variantCount ?? 0)}টি ${product.variantOptionLabel}`
+              : "ভ্যারিয়েন্ট"}{" "}
+            · বাছুন
           </Link>
         ) : (
           <MiniAddToCart product={product} />
@@ -109,7 +115,7 @@ export function FlashDeal({ config }: { config: FlashSaleConfig }) {
 
   return (
     <section className="mt-5">
-      <div className="relative mb-3 flex items-baseline">
+      <div className="relative mb-5 mt-2 flex items-baseline">
         <h2 className="font-display font-bold  text-2xl">
           ফ্ল্যাশ <span className="text-danger">ডিল</span>
         </h2>
@@ -122,7 +128,7 @@ export function FlashDeal({ config }: { config: FlashSaleConfig }) {
           সব অফার দেখুন →
         </Link>
       </div>
-      <div className="scrollbar-visible flex gap-3 overflow-x-auto pb-3">
+      <div className=" flex gap-3 overflow-x-auto pb-3">
         {config.items.map((p) => (
           <FlashDealCard key={p.productId} product={p} />
         ))}

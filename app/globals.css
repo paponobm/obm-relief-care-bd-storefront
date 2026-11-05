@@ -22,6 +22,10 @@
      flips to a light mint in dark mode (made for text on a dark surface,
      not for use as a background fill). */
   --hero-bg: #155c2b;
+  /* Solid-green CTA buttons (e.g. "+ কার্টে যোগ করুন") — white text in light
+     mode, black in dark mode, since dark mode's --leaf is a brighter green
+     that black reads better against. */
+  --cta-text: #ffffff;
   color-scheme: light;
 }
 
@@ -43,6 +47,7 @@
     --danger: #ff7b7b;
     --danger-soft: #3a1414;
     --hero-bg: #123f21;
+    --cta-text: #000000;
     color-scheme: dark;
   }
 }
@@ -62,6 +67,7 @@
   --danger: #ff7b7b;
   --danger-soft: #3a1414;
   --hero-bg: #123f21;
+  --cta-text: #000000;
   color-scheme: dark;
 }
 
@@ -94,19 +100,21 @@ body {
    the browser's own default is too thin/overlay-hidden to read as "this
    scrolls" at a glance, which the reference design's own visible bar is
    there to signal. */
+/* Fixed neutral gray/white, not themed off --leaf — matches the reference
+   design's own scrollbar exactly, in both light and dark mode. */
 .scrollbar-visible {
   scrollbar-width: thin;
-  scrollbar-color: var(--leaf) var(--leaf-soft);
+  scrollbar-color: #9f9f9f #2c2c2c;
 }
 .scrollbar-visible::-webkit-scrollbar {
   height: 6px;
 }
 .scrollbar-visible::-webkit-scrollbar-track {
-  background: var(--leaf-soft);
+  background: #2c2c2c;
   border-radius: 999px;
 }
 .scrollbar-visible::-webkit-scrollbar-thumb {
-  background: var(--leaf);
+  background: #9f9f9f;
   border-radius: 999px;
 }
 

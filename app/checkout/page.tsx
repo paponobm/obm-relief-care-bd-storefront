@@ -146,7 +146,12 @@ export default function CheckoutPage() {
             {items.map((i) => (
               <div key={i.productId} className="grid grid-cols-[48px_1fr_auto] items-center gap-2.5 text-sm">
                 <div className="h-12 w-12 overflow-hidden rounded-lg">
-                  <ProductArt name={i.name} categoryName={null} thumbnailUrl={i.image} />
+                  <ProductArt
+                    name={i.name}
+                    categoryName={null}
+                    thumbnailUrl={i.image}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div>
                   <div className="line-clamp-1 font-medium">{i.name}</div>

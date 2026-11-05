@@ -167,7 +167,12 @@ export default function QuizPage() {
                   {g.items.slice(0, 2).map((p, idx) => (
                     <div key={p.productId} className="grid grid-cols-[48px_1fr_auto] items-center gap-3 rounded-xl bg-bg p-2">
                       <div className="h-12 w-12 overflow-hidden rounded-lg">
-                        <ProductArt name={p.name} categoryName={p.category?.name ?? null} thumbnailUrl={p.thumbnailUrl} />
+                        <ProductArt
+                          name={p.name}
+                          categoryName={p.category?.name ?? null}
+                          thumbnailUrl={p.thumbnailUrl}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
                       <div className="min-w-0">
                         <span className="text-[11px] font-bold text-amber-deep">{idx === 0 ? "সবচেয়ে উপযুক্ত" : "বিকল্প"}</span>

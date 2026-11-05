@@ -26,7 +26,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   return (
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div className="aspect-square overflow-hidden rounded-card bg-leaf-soft">
+        <div className="relative aspect-square overflow-hidden rounded-card bg-leaf-soft">
           <ProductArt name={product.name} categoryName={product.category?.name ?? null} thumbnailUrl={product.thumbnailUrl} />
         </div>
         <div className="flex flex-col gap-3">

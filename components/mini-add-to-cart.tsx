@@ -35,7 +35,7 @@ export function MiniAddToCart({ product }: { product: PublicProduct }) {
             1,
           )
         }
-        className="block w-full rounded-lg bg-leaf py-2 text-center text-xs font-semibold text-white"
+        className="block w-full rounded-lg bg-leaf py-1.5 text-center text-md font-semibold text-[var(--cta-text)]"
       >
         + কার্টে যোগ করুন
       </button>

@@ -73,9 +73,16 @@ export interface PublicProduct {
   slogan: string | null;
   specifications: ProductSpecification[] | null;
   hasVariants: boolean;
-  // Only present when hasVariants — the Flash Deal card's "৳min–৳max".
+  // Only present when hasVariants — the Flash Deal card's "৳min–৳max" and
+  // its "২টি সাইজ · বাছুন"-style button label. variantOptionLabel is the
+  // attribute name (e.g. "সাইজ") when the product's variants were all
+  // generated from a single Step 1 option; null means either no variants,
+  // variants added without that generator, or more than one attribute
+  // combined — the button falls back to a generic "ভ্যারিয়েন্ট" label then.
   minPrice?: number;
   maxPrice?: number;
+  variantCount?: number;
+  variantOptionLabel?: string | null;
 }
 
 export interface FlashSaleConfig {
