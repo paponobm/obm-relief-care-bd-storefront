@@ -85,7 +85,7 @@ export function ProductDealCard({ product }: { product: PublicProduct }) {
         ) : (
           <div className="num mt-auto flex items-baseline gap-2">
             <b className="font-display font-bold text-base text-lg text-orange-600">{bnTaka(product.price)}</b>
-            {product.compareAtPrice ? <s className="text-xs text-muted">{bnTaka(product.compareAtPrice)}</s> : null}
+            {product.compareAtPrice ? <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s> : null}
           </div>
         )}
 

@@ -5,17 +5,19 @@ import { ComboBanner } from "@/components/combo-banner";
 import { FlashDeal } from "@/components/flash-deal";
 import { HelpCards } from "@/components/help-cards";
 import { AllProductsGrid } from "@/components/all-products-grid";
-import { getCategories, getChannelConfig, getFlashSale, getProducts } from "@/lib/store";
+import { Reviews } from "@/components/reviews";
+import { getCategories, getChannelConfig, getFlashSale, getProducts, getReviews } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, , all, channel, flashSale] = await Promise.all([
+  const [categories, , all, channel, flashSale, reviews] = await Promise.all([
     getCategories(),
     getProducts({ featured: true, limit: 8 }),
     getProducts({ limit: 10 }),
     getChannelConfig().catch(() => null),
     getFlashSale().catch(() => ({ enabled: false, endsAt: null, items: [] })),
+    getReviews().catch(() => []),
   ]);
 
   return (
@@ -104,9 +106,11 @@ export default async function HomePage() {
         )}
       </section>
 
+      <Reviews reviews={reviews} />
+
       <section className="rounded-card border border-dashed border-amber bg-amber-soft p-4 text-sm text-ink">
         <b className="font-display block text-base text-amber-deep">শীঘ্রই আসছে</b>
-        কুপন কোড, রেফারেল বোনাস, VIP কার্ড, এবং কাস্টমার রিভিউ — এই ফিচারগুলো নিয়ে আমরা কাজ করছি।
+        কুপন কোড, রেফারেল বোনাস, এবং VIP কার্ড — এই ফিচারগুলো নিয়ে আমরা কাজ করছি।
       </section>
     </div>
   );

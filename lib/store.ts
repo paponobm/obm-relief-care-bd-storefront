@@ -91,6 +91,16 @@ export interface FlashSaleConfig {
   items: PublicProduct[];
 }
 
+export interface Review {
+  customerName: string;
+  location: string | null;
+  rating: number;
+  text: string;
+  // null when not linked, or when the linked product is no longer
+  // published/active on this channel.
+  product: { name: string; slug: string } | null;
+}
+
 export interface PublicCategory {
   id: string;
   name: string;
@@ -154,6 +164,12 @@ export function getProduct(slug: string) {
 // section, never an error.
 export function getFlashSale(): Promise<FlashSaleConfig> {
   return getJson<FlashSaleConfig>("/flash-sale");
+}
+
+// Admin-curated via Settings → Review — empty means the section doesn't
+// render (no sample testimonials are ever shipped).
+export function getReviews(): Promise<Review[]> {
+  return getJson<Review[]>("/reviews");
 }
 
 export async function placeOrder(payload: {
