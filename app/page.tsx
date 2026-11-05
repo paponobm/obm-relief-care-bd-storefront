@@ -3,16 +3,18 @@ import { ProductCard } from "@/components/product-card";
 import { HeroBanner } from "@/components/hero-banner";
 import { TrustStrip } from "@/components/trust-strip";
 import { ComboBanner } from "@/components/combo-banner";
-import { getCategories, getChannelConfig, getProducts } from "@/lib/store";
+import { FlashDeal } from "@/components/flash-deal";
+import { getCategories, getChannelConfig, getFlashSale, getProducts } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, featured, all, channel] = await Promise.all([
+  const [categories, featured, all, channel, flashSale] = await Promise.all([
     getCategories(),
     getProducts({ featured: true, limit: 8 }),
     getProducts({ limit: 12 }),
     getChannelConfig().catch(() => null),
+    getFlashSale().catch(() => ({ enabled: false, endsAt: null, items: [] })),
   ]);
 
   return (
@@ -28,7 +30,7 @@ export default async function HomePage() {
 
       <section>
         <div className="mb-3 mt-8 flex items-baseline justify-between">
-          <h2 className="font-bold tx text-2xl">ক্যাটাগরি</h2>
+          <h2 className="font-bold  text-2xl">ক্যাটাগরি</h2>
           <Link href="/products" className="font-semibold text-leaf">
             সব পণ্য →
           </Link>
@@ -67,6 +69,8 @@ export default async function HomePage() {
       </section>
 
       <ComboBanner configs={channel?.comboBanners ?? []} />
+
+      <FlashDeal config={flashSale} />
 
       {featured.items.length > 0 && (
         <section>

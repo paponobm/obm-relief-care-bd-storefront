@@ -52,6 +52,11 @@ export async function getChannelConfig(): Promise<ChannelConfig> {
   return res.json() as Promise<ChannelConfig>;
 }
 
+export interface ProductSpecification {
+  key: string;
+  value: string;
+}
+
 export interface PublicProduct {
   productId: string;
   name: string;
@@ -65,6 +70,18 @@ export interface PublicProduct {
   category: { id: string; name: string } | null;
   brand: { id: string; name: string } | null;
   inStock: boolean;
+  slogan: string | null;
+  specifications: ProductSpecification[] | null;
+  hasVariants: boolean;
+  // Only present when hasVariants — the Flash Deal card's "৳min–৳max".
+  minPrice?: number;
+  maxPrice?: number;
+}
+
+export interface FlashSaleConfig {
+  enabled: boolean;
+  endsAt: string | null;
+  items: PublicProduct[];
 }
 
 export interface PublicCategory {
@@ -123,6 +140,13 @@ export function getProducts(
 
 export function getProduct(slug: string) {
   return getJson<PublicProduct>(`/products/${slug}`);
+}
+
+// Admin-curated via Settings → Flash Sale (which products, what order, and
+// the countdown deadline) — disabled or empty just means an empty/no-op
+// section, never an error.
+export function getFlashSale(): Promise<FlashSaleConfig> {
+  return getJson<FlashSaleConfig>("/flash-sale");
 }
 
 export async function placeOrder(payload: {
