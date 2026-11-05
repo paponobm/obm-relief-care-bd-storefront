@@ -59,7 +59,7 @@ export function AllProductsGrid({
           type="button"
           onClick={loadMore}
           disabled={loading}
-          className="mt-4 block w-full rounded-xl border border-leaf py-3 text-center text-sm font-semibold text-leaf disabled:opacity-60"
+          className="mt-5 block w-full rounded-xl border border-leaf py-3 text-center text-sm font-sans font-semibold text-leaf disabled:opacity-60"
         >
           {loading ? "লোড হচ্ছে…" : `পরের ${bn(PAGE_SIZE)}টি পণ্য দেখুন →`}
         </button>

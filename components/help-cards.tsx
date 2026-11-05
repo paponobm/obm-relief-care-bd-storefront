@@ -4,7 +4,7 @@
 // be wired up in a later pass once they say what each should do.
 export function HelpCards() {
   return (
-    <section className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <section className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div className="flex items-center gap-3 rounded-[20px] border-[1.5px] border-leaf bg-leaf-soft p-[18px]">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-leaf text-white">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

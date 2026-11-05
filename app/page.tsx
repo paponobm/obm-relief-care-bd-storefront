@@ -91,7 +91,7 @@ export default async function HomePage() {
       )} */}
 
       <section>
-        <div className="mb-3 mt-4 flex items-baseline justify-between">
+        <div className="mb-3 mt-7 flex items-baseline justify-between">
           <h2 className="font-display font-bold  text-2xl">সকল পণ্য</h2>
           <Link href="/products" className="font-semibold text-leaf">
             সব দেখুন →
