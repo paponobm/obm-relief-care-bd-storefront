@@ -1,18 +1,19 @@
 import Link from "next/link";
-import { ProductCard } from "@/components/product-card";
 import { HeroBanner } from "@/components/hero-banner";
 import { TrustStrip } from "@/components/trust-strip";
 import { ComboBanner } from "@/components/combo-banner";
 import { FlashDeal } from "@/components/flash-deal";
+import { HelpCards } from "@/components/help-cards";
+import { AllProductsGrid } from "@/components/all-products-grid";
 import { getCategories, getChannelConfig, getFlashSale, getProducts } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, featured, all, channel, flashSale] = await Promise.all([
+  const [categories, , all, channel, flashSale] = await Promise.all([
     getCategories(),
     getProducts({ featured: true, limit: 8 }),
-    getProducts({ limit: 12 }),
+    getProducts({ limit: 10 }),
     getChannelConfig().catch(() => null),
     getFlashSale().catch(() => ({ enabled: false, endsAt: null, items: [] })),
   ]);
@@ -72,7 +73,9 @@ export default async function HomePage() {
 
       <FlashDeal config={flashSale} />
 
-      {featured.items.length > 0 && (
+      <HelpCards />
+
+      {/* {featured.items.length > 0 && (
         <section>
           <div className="mb-3 mt-10 flex items-baseline justify-between">
             <h2 className="font-display text-xl">
@@ -85,11 +88,11 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
-      )}
+      )} */}
 
       <section>
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="font-display text-xl">সব পণ্য</h2>
+        <div className="mb-3 mt-4 flex items-baseline justify-between">
+          <h2 className="font-display font-bold  text-2xl">সকল পণ্য</h2>
           <Link href="/products" className="font-semibold text-leaf">
             সব দেখুন →
           </Link>
@@ -97,11 +100,7 @@ export default async function HomePage() {
         {all.items.length === 0 ? (
           <p className="text-muted">এখনো কোনো পণ্য যোগ করা হয়নি।</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {all.items.map((p) => (
-              <ProductCard key={p.productId} product={p} />
-            ))}
-          </div>
+          <AllProductsGrid initialItems={all.items} initialTotal={all.total} initialPage={all.page} />
         )}
       </section>
 
