@@ -47,7 +47,7 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
 
   return (
     <section className="mt-5">
-      <h2 className="font-display mb-3 font-bold text-2xl">
+      <h2 className="mb-3 font-bold text-2xl">
         কাস্টমারদের <span className="text-amber">অভিজ্ঞতা</span>
       </h2>
       <div className=" flex gap-3 overflow-x-auto pb-3">
