@@ -3,7 +3,7 @@
 // category; the shape is guessed from the name only as a presentational cue.
 // Keyed by category NAME (Bengali) since that's what the public product API
 // returns — it has no category slug field.
-const CATEGORY_HUE: Record<string, string> = {
+export const CATEGORY_HUE: Record<string, string> = {
   "সমাধান কিট": "#7A4FB5",
   "ব্যথা উপশম": "#E7672A",
   "ত্বক ও চর্মরোগ": "#1F7A3A",

@@ -11,14 +11,10 @@ export function MiniAddToCart({ product }: { product: PublicProduct }) {
   const { items, add, setQuantity, remove } = useCart();
   const line = items.find((x) => x.productId === product.productId);
 
-  if (!product.inStock) {
-    return (
-      <span className="block rounded-lg bg-black/5 py-2 text-center text-xs font-semibold text-muted">
-        স্টকে নেই
-      </span>
-    );
-  }
-
+  // Orderable regardless of current stock — a sale isn't turned away just
+  // because the shelf is briefly empty; the backend never blocks order
+  // creation on stock either (only later, when an admin marks an order
+  // "Ready to Ship", which is the actual point stock has to be real).
   if (!line) {
     return (
       <button

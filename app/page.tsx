@@ -6,18 +6,20 @@ import { FlashDeal } from "@/components/flash-deal";
 import { HelpCards } from "@/components/help-cards";
 import { AllProductsGrid } from "@/components/all-products-grid";
 import { Reviews } from "@/components/reviews";
-import { getCategories, getChannelConfig, getFlashSale, getProducts, getReviews } from "@/lib/store";
+import { HealthTips } from "@/components/health-tips";
+import { getCategories, getChannelConfig, getFlashSale, getHealthTips, getProducts, getReviews } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, , all, channel, flashSale, reviews] = await Promise.all([
+  const [categories, , all, channel, flashSale, reviews, healthTips] = await Promise.all([
     getCategories(),
     getProducts({ featured: true, limit: 8 }),
     getProducts({ limit: 10 }),
     getChannelConfig().catch(() => null),
     getFlashSale().catch(() => ({ enabled: false, endsAt: null, items: [] })),
     getReviews().catch(() => []),
+    getHealthTips().catch(() => []),
   ]);
 
   return (
@@ -107,6 +109,8 @@ export default async function HomePage() {
       </section>
 
       <Reviews reviews={reviews} />
+
+      <HealthTips tips={healthTips} />
 
       <section className="rounded-card border border-dashed border-amber bg-amber-soft p-4 text-sm text-ink">
         <b className="font-display block text-base text-amber-deep">শীঘ্রই আসছে</b>

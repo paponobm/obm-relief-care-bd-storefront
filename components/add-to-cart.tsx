@@ -31,10 +31,10 @@ export function AddToCart({ product }: { product: PublicProduct }) {
     router.push("/checkout");
   }
 
-  if (!product.inStock) {
-    return <p className="font-semibold text-danger">এই মুহূর্তে স্টকে নেই</p>;
-  }
-
+  // Orderable regardless of current stock — a sale isn't turned away just
+  // because the shelf is briefly empty; the backend never blocks order
+  // creation on stock either (only later, when an admin marks an order
+  // "Ready to Ship", which is the actual point stock has to be real).
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center overflow-hidden rounded-xl border border-leaf">

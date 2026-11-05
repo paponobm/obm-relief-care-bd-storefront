@@ -172,6 +172,20 @@ export function getReviews(): Promise<Review[]> {
   return getJson<Review[]>("/reviews");
 }
 
+export interface HealthTip {
+  title: string;
+  // null when not linked, or when the linked category is no longer
+  // published on this channel.
+  category: string | null;
+  readMinutes: number | null;
+}
+
+// Admin-curated via Settings → Health Tips — empty means the section
+// doesn't render.
+export function getHealthTips(): Promise<HealthTip[]> {
+  return getJson<HealthTip[]>("/health-tips");
+}
+
 export async function placeOrder(payload: {
   customerName: string;
   customerPhone: string;
