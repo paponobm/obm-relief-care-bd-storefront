@@ -50,7 +50,7 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
       <h2 className="font-display mb-3 font-bold text-2xl">
         কাস্টমারদের <span className="text-amber">অভিজ্ঞতা</span>
       </h2>
-      <div className="scrollbar-visible flex gap-3 overflow-x-auto pb-3">
+      <div className=" flex gap-3 overflow-x-auto pb-3">
         {reviews.map((r, i) => (
           <ReviewCard key={i} review={r} />
         ))}
