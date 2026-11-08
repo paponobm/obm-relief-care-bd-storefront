@@ -3,6 +3,7 @@ import "./globals.css";
 import { CartProvider } from "@/lib/cart";
 import { ThemeProvider, THEME_INIT_SCRIPT } from "@/lib/theme";
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { WhatsappWidget } from "@/components/whatsapp-widget";
 import { getChannelConfig, STORE_NAME } from "@/lib/store";
 
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <CartProvider>
             <Header channel={channel} />
             <main className="mx-auto max-w-7xl px-4 py-6 xl:px-8">{children}</main>
+            <Footer />
             <WhatsappWidget />
           </CartProvider>
         </ThemeProvider>

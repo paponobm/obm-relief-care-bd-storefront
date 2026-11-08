@@ -13,6 +13,11 @@ export const STORE_NAME = "Relief Care bd";
 export const WHATSAPP_NUMBER = ""; // e.g. "8801XXXXXXXXX"
 export const SOCIAL_LINKS: { name: string; url: string }[] = [];
 
+// Footer placeholders — generic, non-committal text until the real
+// operating details are supplied; edit before launch.
+export const STORE_HOURS = "সকাল ৯টা থেকে রাত ১০টা";
+export const STORE_ADDRESS = "ঢাকা, বাংলাদেশ";
+
 export interface HeroSlide {
   image: string;
   title?: string;

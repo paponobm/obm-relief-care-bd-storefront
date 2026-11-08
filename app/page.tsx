@@ -7,6 +7,7 @@ import { HelpCards } from "@/components/help-cards";
 import { AllProductsGrid } from "@/components/all-products-grid";
 import { Reviews } from "@/components/reviews";
 import { HealthTips } from "@/components/health-tips";
+import { RecentlyViewed } from "@/components/recently-viewed";
 import { getCategories, getChannelConfig, getFlashSale, getHealthTips, getProducts, getReviews } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -112,10 +113,12 @@ export default async function HomePage() {
 
       <HealthTips tips={healthTips} />
 
-      <section className="rounded-card border border-dashed border-amber bg-amber-soft p-4 text-sm text-ink">
+      <RecentlyViewed />
+
+      {/* <section className="rounded-card border border-dashed border-amber bg-amber-soft p-4 text-sm text-ink">
         <b className="font-display block text-base text-amber-deep">শীঘ্রই আসছে</b>
         কুপন কোড, রেফারেল বোনাস, এবং VIP কার্ড — এই ফিচারগুলো নিয়ে আমরা কাজ করছি।
-      </section>
+      </section> */}
     </div>
   );
 }

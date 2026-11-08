@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductArt } from "@/components/product-art";
 import { ProductCard } from "@/components/product-card";
+import { TrackView } from "@/components/track-view";
 import { formatTaka, getProduct, getProducts } from "@/lib/store";
 import { COMPLEMENT } from "@/lib/quiz-data";
 
@@ -25,6 +26,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <div className="flex flex-col gap-8">
+      <TrackView slug={product.slug} />
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-card bg-leaf-soft">
           <ProductArt name={product.name} categoryName={product.category?.name ?? null} thumbnailUrl={product.thumbnailUrl} />

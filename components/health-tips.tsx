@@ -35,7 +35,7 @@ export function HealthTips({ tips }: { tips: HealthTip[] }) {
   if (tips.length === 0) return null;
 
   return (
-    <section className="mt-5">
+    <section id="health-tips" className="mt-5">
       <h2 className="mb-3 font-bold text-2xl">
         স্বাস্থ্য <span className="text-amber">টিপস</span>
       </h2>
