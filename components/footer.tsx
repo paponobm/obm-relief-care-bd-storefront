@@ -26,9 +26,9 @@ export function Footer() {
           <Link href="/track" className="text-muted hover:text-leaf-deep">
             অর্ডার ট্র্যাক করুন
           </Link>
-          {/* No policy page exists yet, so this stays plain text rather than
-              a dead link — same "inert until it's real" rule as Help Cards. */}
-          <span className="text-muted">ডেলিভারি ও রিটার্ন নীতি</span>
+          <Link href="/policy" className="text-muted hover:text-leaf-deep">
+            ডেলিভারি ও রিটার্ন নীতি
+          </Link>
           <Link href="/quiz" className="text-muted hover:text-leaf-deep">
             কোন পণ্য নেবেন? কুইজ
           </Link>

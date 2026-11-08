@@ -4,13 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
-import type { ChannelConfig } from "@/lib/store";
+import type { ChannelConfig, PublicCategory } from "@/lib/store";
 import { ThemeToggle } from "./theme-toggle";
+import { SideMenu } from "./side-menu";
 
-export function Header({ channel }: { channel: ChannelConfig }) {
+export function Header({ channel, categories }: { channel: ChannelConfig; categories: PublicCategory[] }) {
   const { count } = useCart();
   const router = useRouter();
   const [q, setQ] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -21,10 +23,10 @@ export function Header({ channel }: { channel: ChannelConfig }) {
     <header className="sticky mt-2 top-0 z-40 border-b border-line bg-surface">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2.5 xl:px-8">
         <div className="flex shrink-0 items-center gap-3 lg:flex-1">
-          {/* Not wired up yet — side menu comes in a later step. */}
           <button
             type="button"
             aria-label="মেনু"
+            onClick={() => setMenuOpen(true)}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-bg text-ink"
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
@@ -107,6 +109,7 @@ export function Header({ channel }: { channel: ChannelConfig }) {
           অর্ডার ট্র্যাকিং
         </Link>
       </nav> */}
+      <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} channel={channel} categories={categories} />
     </header>
   );
 }

@@ -5,7 +5,7 @@ import { ThemeProvider, THEME_INIT_SCRIPT } from "@/lib/theme";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { WhatsappWidget } from "@/components/whatsapp-widget";
-import { getChannelConfig, STORE_NAME } from "@/lib/store";
+import { getCategories, getChannelConfig, STORE_NAME } from "@/lib/store";
 
 export const metadata: Metadata = {
   title: STORE_NAME,
@@ -23,7 +23,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     heroSlides: [],
     trustBadges: [],
     comboBanners: [],
+    customerCarePhone: null,
+    socialLinks: [],
   }));
+  const categories = await getCategories().catch(() => []);
 
   return (
     <html lang="bn">
@@ -33,7 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen bg-bg text-ink antialiased">
         <ThemeProvider>
           <CartProvider>
-            <Header channel={channel} />
+            <Header channel={channel} categories={categories} />
             <main className="mx-auto max-w-7xl px-4 py-6 xl:px-8">{children}</main>
             <Footer />
             <WhatsappWidget />

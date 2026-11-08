@@ -1,6 +1,6 @@
-// export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
 
- const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
+//  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
 
 
 
@@ -11,7 +11,6 @@ export const STORE_NAME = "Relief Care bd";
 // Left blank on purpose — fill in before launch. The WhatsApp button hides
 // itself rather than show a number that isn't real.
 export const WHATSAPP_NUMBER = ""; // e.g. "8801XXXXXXXXX"
-export const SOCIAL_LINKS: { name: string; url: string }[] = [];
 
 // Footer placeholders — generic, non-committal text until the real
 // operating details are supplied; edit before launch.
@@ -42,6 +41,15 @@ export interface ComboBannerConfig {
   tiers: ComboTier[];
 }
 
+// Fixed platform palette — keep in sync with the backend's
+// SOCIAL_LINK_PLATFORMS (social-link.dto.ts).
+export type SocialPlatform = "facebook" | "instagram" | "youtube" | "tiktok" | "whatsapp" | "website";
+
+export interface SocialLink {
+  platform: SocialPlatform;
+  url: string;
+}
+
 export interface ChannelConfig {
   name: string;
   logoUrl: string | null;
@@ -49,6 +57,8 @@ export interface ChannelConfig {
   heroSlides: HeroSlide[];
   trustBadges: TrustBadge[];
   comboBanners: ComboBannerConfig[];
+  customerCarePhone: string | null;
+  socialLinks: SocialLink[];
 }
 
 export async function getChannelConfig(): Promise<ChannelConfig> {
@@ -112,6 +122,8 @@ export interface PublicCategory {
   slug: string;
   parentId: string | null;
   imageUrl: string | null;
+  slogan: string | null;
+  productCount: number;
 }
 
 export interface ProductPage {

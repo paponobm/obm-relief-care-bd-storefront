@@ -46,7 +46,7 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
   if (reviews.length === 0) return null;
 
   return (
-    <section className="mt-5">
+    <section id="customer-reviews" className="mt-5">
       <h2 className="mb-3 font-bold text-2xl">
         কাস্টমারদের <span className="text-amber">অভিজ্ঞতা</span>
       </h2>

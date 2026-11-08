@@ -10,7 +10,7 @@ export function FlashDeal({ config }: { config: FlashSaleConfig }) {
   if (!config.enabled || config.items.length === 0) return null;
 
   return (
-    <section className="mt-5">
+    <section id="flash-deal" className="mt-5">
       <div className="relative mb-5 mt-2 flex items-baseline">
         <h2 className="font-display font-bold  text-2xl">
           ফ্ল্যাশ <span className="text-danger">ডিল</span>
