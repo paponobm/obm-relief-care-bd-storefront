@@ -8,7 +8,7 @@ import { bn } from "@/lib/bn-digits";
 // of the storefront uses, with Bengali numerals on top — kept local to this
 // component rather than changing formatTaka itself, which every other price
 // on the site still renders in Latin digits.
-function bnTaka(value: number): string {
+export function bnTaka(value: number): string {
   return bn(formatTaka(value));
 }
 
@@ -16,7 +16,7 @@ function bnTaka(value: number): string {
 // Specifications / Key Features → Origin) — same English names and order,
 // so every option there has a flag here. An unlisted/custom-typed value
 // just shows as plain text with no flag rather than breaking.
-const COUNTRY_FLAGS: Record<string, string> = {
+export const COUNTRY_FLAGS: Record<string, string> = {
   Bangladesh: "🇧🇩",
   India: "🇮🇳",
   Thailand: "🇹🇭",
@@ -31,7 +31,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
   "Sri Lanka": "🇱🇰",
 };
 
-function importCountry(product: PublicProduct): string | null {
+export function importCountry(product: PublicProduct): string | null {
   // "Origin" is the only key the admin page writes now; "Country"/"দেশ"/
   // "আমদানি" are kept so older, pre-redesign data still shows.
   const spec = product.specifications?.find((s) => /origin|country|import|দেশ|আমদানি/i.test(s.key));
