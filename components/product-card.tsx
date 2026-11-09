@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ProductArt } from "./product-art";
-import { formatTaka, type PublicProduct } from "@/lib/store";
+import type { PublicProduct } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 import { bnTaka, COUNTRY_FLAGS, importCountry } from "./product-deal-card";
 import { MiniAddToCart } from "./mini-add-to-cart";

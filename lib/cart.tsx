@@ -1,9 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export interface CartItem {
   productId: string;
+  // Set when this line is a specific variant, not the base product — two
+  // variants of the same product are different lines (different price),
+  // so every lookup/match below keys on productId+variantId together, not
+  // productId alone.
+  variantId?: string;
+  variantLabel?: string;
   slug: string;
   name: string;
   image: string | null;
@@ -16,8 +22,8 @@ interface CartContextValue {
   count: number;
   subtotal: number;
   add: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-  setQuantity: (productId: string, quantity: number) => void;
-  remove: (productId: string) => void;
+  setQuantity: (productId: string, quantity: number, variantId?: string) => void;
+  remove: (productId: string, variantId?: string) => void;
   clear: () => void;
 }
 
@@ -25,9 +31,12 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "relief-care-cart";
 
+function sameLine(a: { productId: string; variantId?: string }, b: { productId: string; variantId?: string }): boolean {
+  return a.productId === b.productId && a.variantId === b.variantId;
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const loaded = useRef(false);
 
   useEffect(() => {
     try {
@@ -39,42 +48,55 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // corrupt/unavailable storage — start from an empty cart
     }
-    loaded.current = true;
   }, []);
 
-  useEffect(() => {
-    if (!loaded.current) return;
+  // Persisted directly inside each mutator, from the freshly-computed next
+  // state — not via a separate `useEffect([items])` watcher. That watcher
+  // approach raced the load effect above: on mount it ran once with the
+  // still-empty initial `items` before the load's setItems had flushed,
+  // silently overwriting a real saved cart with "[]" (most visible under
+  // React StrictMode's double-effect dev behavior, which re-reads
+  // localStorage a second time and picks up its own corruption).
+  function persist(next: CartItem[]) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
       // storage full/unavailable — cart still works in memory for this session
     }
-  }, [items]);
+  }
 
   function add(item: Omit<CartItem, "quantity">, quantity = 1) {
     setItems((prev) => {
-      const existing = prev.find((x) => x.productId === item.productId);
-      if (existing) {
-        return prev.map((x) =>
-          x.productId === item.productId ? { ...x, quantity: x.quantity + quantity } : x,
-        );
-      }
-      return [...prev, { ...item, quantity }];
+      const existing = prev.find((x) => sameLine(x, item));
+      const next = existing
+        ? prev.map((x) => (sameLine(x, item) ? { ...x, quantity: x.quantity + quantity } : x))
+        : [...prev, { ...item, quantity }];
+      persist(next);
+      return next;
     });
   }
 
-  function setQuantity(productId: string, quantity: number) {
-    setItems((prev) =>
-      prev.map((x) => (x.productId === productId ? { ...x, quantity: Math.max(1, quantity) } : x)),
-    );
+  function setQuantity(productId: string, quantity: number, variantId?: string) {
+    setItems((prev) => {
+      const next = prev.map((x) =>
+        sameLine(x, { productId, variantId }) ? { ...x, quantity: Math.max(1, quantity) } : x,
+      );
+      persist(next);
+      return next;
+    });
   }
 
-  function remove(productId: string) {
-    setItems((prev) => prev.filter((x) => x.productId !== productId));
+  function remove(productId: string, variantId?: string) {
+    setItems((prev) => {
+      const next = prev.filter((x) => !sameLine(x, { productId, variantId }));
+      persist(next);
+      return next;
+    });
   }
 
   function clear() {
     setItems([]);
+    persist([]);
   }
 
   const count = items.reduce((a, x) => a + x.quantity, 0);

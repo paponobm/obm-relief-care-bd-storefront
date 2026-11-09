@@ -57,7 +57,7 @@ export default function CheckoutPage() {
         customerPhone: phone,
         shippingAddress: address.trim(),
         notes: note.trim() || undefined,
-        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
       });
       setOrder(result);
       clear();
@@ -144,7 +144,7 @@ export default function CheckoutPage() {
         ) : (
           <div className="mb-3 flex flex-col gap-2.5">
             {items.map((i) => (
-              <div key={i.productId} className="grid grid-cols-[48px_1fr_auto] items-center gap-2.5 text-sm">
+              <div key={`${i.productId}:${i.variantId ?? ""}`} className="grid grid-cols-[48px_1fr_auto] items-center gap-2.5 text-sm">
                 <div className="h-12 w-12 overflow-hidden rounded-lg">
                   <ProductArt
                     name={i.name}
@@ -154,17 +154,28 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <div className="line-clamp-1 font-medium">{i.name}</div>
+                  <div className="line-clamp-1 font-medium">
+                    {i.name}
+                    {i.variantLabel && <span className="text-muted"> · {i.variantLabel}</span>}
+                  </div>
                   <div className="num flex items-center gap-2 text-xs text-muted">
                     {formatTaka(i.price)} ×
-                    <button type="button" onClick={() => setQuantity(i.productId, i.quantity - 1)} className="px-1">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(i.productId, i.quantity - 1, i.variantId)}
+                      className="px-1"
+                    >
                       −
                     </button>
                     {i.quantity}
-                    <button type="button" onClick={() => setQuantity(i.productId, i.quantity + 1)} className="px-1">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(i.productId, i.quantity + 1, i.variantId)}
+                      className="px-1"
+                    >
                       +
                     </button>
-                    <button type="button" onClick={() => remove(i.productId)} className="underline">
+                    <button type="button" onClick={() => remove(i.productId, i.variantId)} className="underline">
                       সরান
                     </button>
                   </div>

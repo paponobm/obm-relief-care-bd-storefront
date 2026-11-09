@@ -1,6 +1,6 @@
-// export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
 
- const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
+//  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
 
 
 
@@ -98,6 +98,20 @@ export interface PublicProduct {
   maxPrice?: number;
   variantCount?: number;
   variantOptionLabel?: string | null;
+  // The actual pickable list, same gate as minPrice/maxPrice — each
+  // variant's own id/price/compareAtPrice, for a real variant picker
+  // (product page, combo builder) rather than just the summary range.
+  variants?: ProductVariantOption[];
+}
+
+export interface ProductVariantOption {
+  id: string;
+  label: string | null;
+  price: number;
+  compareAtPrice: number | null;
+  imageUrl: string | null;
+  inStock: boolean;
+  isDefault: boolean;
 }
 
 export interface FlashSaleConfig {
@@ -208,7 +222,7 @@ export async function placeOrder(payload: {
   customerPhone: string;
   shippingAddress: string;
   notes?: string;
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; variantId?: string; quantity: number }[];
 }): Promise<CreatedOrder> {
   const res = await fetch(`${API_URL}/store/${CHANNEL_SLUG}/orders`, {
     method: "POST",

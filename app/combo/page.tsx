@@ -1,10 +1,17 @@
-export default function ComboPage() {
-  return (
-    <div className="mx-auto max-w-md rounded-card bg-surface p-8 text-center">
-      <h1 className="font-display text-xl">নিজের কম্বো বানান শীঘ্রই আসছে</h1>
-      <p className="mt-2 text-sm text-muted">
-        এখন পছন্দের পণ্য আলাদাভাবে কার্টে যোগ করুন, খুব শীঘ্রই এখান থেকেই নিজের প্যাকেজ বানাতে পারবেন।
-      </p>
-    </div>
-  );
+import { ComboBuilder } from "@/components/combo-builder";
+import { getCategories, getChannelConfig, getProducts } from "@/lib/store";
+
+export const dynamic = "force-dynamic";
+
+export default async function ComboPage() {
+  const [channel, categories, products] = await Promise.all([
+    getChannelConfig().catch(() => null),
+    getCategories().catch(() => []),
+    // 100 is the storefront API's own max per-request limit (see
+    // StorefrontService.getProducts) — comfortably above this channel's
+    // catalog size, so every pickable product shows up in one request.
+    getProducts({ limit: 100 }).then((r) => r.items).catch(() => []),
+  ]);
+
+  return <ComboBuilder tiers={channel?.comboBanners[0]?.tiers ?? []} categories={categories} products={products} />;
 }

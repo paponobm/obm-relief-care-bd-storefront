@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
-import type { PublicProduct } from "@/lib/store";
+import { formatTaka, type PublicProduct } from "@/lib/store";
 
 export function AddToCart({ product }: { product: PublicProduct }) {
   const { add } = useCart();
@@ -11,13 +11,23 @@ export function AddToCart({ product }: { product: PublicProduct }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
+  const variants = product.hasVariants ? (product.variants ?? []) : [];
+  const [variantId, setVariantId] = useState(() => variants.find((v) => v.isDefault)?.id ?? variants[0]?.id);
+  const selected = variants.find((v) => v.id === variantId) ?? null;
+
+  const price = selected?.price ?? product.price;
+  const compareAtPrice = selected ? selected.compareAtPrice : product.compareAtPrice;
+  const discount = compareAtPrice && compareAtPrice > price ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100) : 0;
+
   function toCartItem() {
     return {
       productId: product.productId,
+      variantId: selected?.id,
+      variantLabel: selected?.label ?? undefined,
       slug: product.slug,
       name: product.name,
-      image: product.thumbnailUrl,
-      price: product.price,
+      image: selected?.imageUrl ?? product.thumbnailUrl,
+      price,
     };
   }
 
@@ -37,6 +47,37 @@ export function AddToCart({ product }: { product: PublicProduct }) {
   // "Ready to Ship", which is the actual point stock has to be real).
   return (
     <div className="flex flex-col gap-3">
+      {product.hasVariants && variants.length > 0 && (
+        <>
+          <div className="num flex items-baseline gap-2">
+            <b className="font-display text-2xl text-amber-deep">{formatTaka(price)}</b>
+            {compareAtPrice ? (
+              <>
+                <s className="text-sm text-muted">{formatTaka(compareAtPrice)}</s>
+                {discount > 0 && (
+                  <span className="rounded-md bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber-deep">
+                    {discount}% ছাড়
+                  </span>
+                )}
+              </>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => setVariantId(v.id)}
+                className={`rounded-lg border px-3.5 py-2 text-sm font-semibold ${
+                  v.id === variantId ? "border-leaf bg-leaf text-white" : "border-line text-ink"
+                }`}
+              >
+                {v.label ?? "ভ্যারিয়েন্ট"}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       <div className="flex items-center overflow-hidden rounded-xl border border-leaf">
         <button
           type="button"

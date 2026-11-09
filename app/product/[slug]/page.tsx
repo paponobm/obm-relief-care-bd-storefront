@@ -38,19 +38,24 @@ export default async function ProductPage({ params }: { params: { slug: string }
             </span>
           )}
           <h1 className="font-display text-2xl leading-tight">{product.name}</h1>
-          <div className="num flex items-baseline gap-2">
-            <b className="font-display text-2xl text-amber-deep">{formatTaka(product.price)}</b>
-            {product.compareAtPrice ? (
-              <>
-                <s className="text-sm text-muted">{formatTaka(product.compareAtPrice)}</s>
-                {discount > 0 && (
-                  <span className="rounded-md bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber-deep">
-                    {discount}% ছাড়
-                  </span>
-                )}
-              </>
-            ) : null}
-          </div>
+          {/* A variant product's real price depends on which variant is
+              picked, so AddToCart (below) owns that display reactively —
+              this static block would just show a meaningless base price. */}
+          {!product.hasVariants && (
+            <div className="num flex items-baseline gap-2">
+              <b className="font-display text-2xl text-amber-deep">{formatTaka(product.price)}</b>
+              {product.compareAtPrice ? (
+                <>
+                  <s className="text-sm text-muted">{formatTaka(product.compareAtPrice)}</s>
+                  {discount > 0 && (
+                    <span className="rounded-md bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber-deep">
+                      {discount}% ছাড়
+                    </span>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
           {product.description && (
             <div
               className="rich-content text-sm text-muted"
