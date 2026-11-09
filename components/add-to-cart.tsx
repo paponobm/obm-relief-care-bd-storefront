@@ -9,6 +9,14 @@ import { bnTaka } from "./product-deal-card";
 
 const QUICK_QTYS = [1, 2, 3];
 
+// Site-wide bulk-order pricing: 2 of the same item gets 5% off, 3 or more
+// gets 10% off. Applies to every product's buy box the same way.
+function qtyDiscountRate(n: number) {
+  if (n >= 3) return 0.1;
+  if (n === 2) return 0.05;
+  return 0;
+}
+
 export function AddToCart({ product }: { product: PublicProduct }) {
   const { add } = useCart();
   const router = useRouter();
@@ -36,7 +44,7 @@ export function AddToCart({ product }: { product: PublicProduct }) {
       slug: product.slug,
       name: product.name,
       image: selected?.imageUrl ?? product.thumbnailUrl,
-      price,
+      price: Math.round(price * (1 - qtyDiscountRate(qty))),
     };
   }
 
@@ -92,7 +100,9 @@ export function AddToCart({ product }: { product: PublicProduct }) {
         {/* <p className="mb-1.5 text-sm font-semibold text-ink">পরিমাণ বাছাই করুন</p> */}
         <div className="grid grid-cols-3 gap-2">
           {QUICK_QTYS.map((n) => {
-            const savings = compareAtPrice && compareAtPrice > price ? (compareAtPrice - price) * n : 0;
+            const rate = qtyDiscountRate(n);
+            const unit = Math.round(price * (1 - rate));
+            const total = unit * n;
             return (
               <button
                 key={n}
@@ -102,10 +112,11 @@ export function AddToCart({ product }: { product: PublicProduct }) {
                   qty === n ? "border-leaf bg-leaf-soft" : "border-line"
                 }`}
               >
-                <span className="num block text-sm font-bold text-ink">{bn(n)}টি,{bnTaka(price * n)}</span>
-                {/* <span className="num block text-xs text-leaf-deep">{bnTaka(price * n)}</span> */}
+                <span className="num block text-sm font-bold text-ink">
+                  {bn(n)}টি {bnTaka(total)}
+                </span>
                 <span className="num block text-[11px] text-muted">
-                  {n === 1 ? "একটি" : savings > 0 ? `সাশ্রয় ${bnTaka(savings)}` : " "}
+                  {rate > 0 ? `${bn(Math.round(rate * 100))}% বাড়তি ছাড়` : "একটি"}
                 </span>
               </button>
             );

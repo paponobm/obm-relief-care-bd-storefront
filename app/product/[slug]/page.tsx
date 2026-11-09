@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
 import { BundleWith } from "@/components/bundle-with";
-import { ProductArt } from "@/components/product-art";
+import { ProductGallery } from "@/components/product-gallery";
 import { Reviews } from "@/components/reviews";
 import { TrackView } from "@/components/track-view";
 import { getProduct, getProducts, getReviews } from "@/lib/store";
@@ -42,14 +42,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
     <div className="flex flex-col gap-6">
       <TrackView slug={product.slug} />
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-leaf-soft sm:aspect-square">
-          {!product.hasVariants && discount > 0 && (
-            <span className="num absolute left-3 top-3 z-10 rounded-md bg-danger px-2 py-1 text-sm font-bold text-white">
-              -{bn(discount)}%
-            </span>
-          )}
-          <ProductArt name={product.name} categoryName={category?.name ?? null} thumbnailUrl={product.thumbnailUrl} />
-        </div>
+        <ProductGallery product={product} categoryName={category?.name ?? null} discount={discount} />
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             {category && (
