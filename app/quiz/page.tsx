@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
-import { formatTaka, getProducts, type PublicProduct } from "@/lib/store";
+import { getProducts, type PublicProduct } from "@/lib/store";
 import { QUIZ, KIT_MATCHES } from "@/lib/quiz-data";
 import { ProductArt } from "@/components/product-art";
+import { bnTaka } from "@/components/product-deal-card";
 
 export default function QuizPage() {
   const [products, setProducts] = useState<PublicProduct[]>([]);
@@ -140,7 +141,7 @@ export default function QuizPage() {
               <b className="font-display block text-base">{kit.name}</b>
               <p className="text-xs text-muted">{kit.description}</p>
               <div className="num mt-2 flex items-center justify-between">
-                <b className="text-amber-deep">{formatTaka(kit.price)}</b>
+                <b className="text-amber-deep">{bnTaka(kit.price)}</b>
                 <div className="flex gap-2">
                   <Link href={`/product/${kit.slug}`} className="rounded-lg border border-leaf px-3 py-1.5 text-sm font-semibold text-leaf">
                     দেখুন
@@ -177,7 +178,7 @@ export default function QuizPage() {
                       <div className="min-w-0">
                         <span className="text-[11px] font-bold text-amber-deep">{idx === 0 ? "সবচেয়ে উপযুক্ত" : "বিকল্প"}</span>
                         <div className="truncate text-sm font-semibold">{p.name}</div>
-                        <div className="num text-xs text-amber-deep">{formatTaka(p.price)}</div>
+                        <div className="num text-xs text-amber-deep">{bnTaka(p.price)}</div>
                       </div>
                       <button
                         type="button"

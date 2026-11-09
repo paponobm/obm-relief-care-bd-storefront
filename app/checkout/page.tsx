@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
-import { formatTaka, placeOrder, saveCheckoutLead, type CreatedOrder } from "@/lib/store";
+import { placeOrder, saveCheckoutLead, type CreatedOrder } from "@/lib/store";
 import { ProductArt } from "@/components/product-art";
+import { bnTaka } from "@/components/product-deal-card";
+import { bn } from "@/lib/bn-digits";
 
 const PHONE_RE = /^01\d{9}$/;
 
@@ -159,7 +161,7 @@ export default function CheckoutPage() {
                     {i.variantLabel && <span className="text-muted"> · {i.variantLabel}</span>}
                   </div>
                   <div className="num flex items-center gap-2 text-xs text-muted">
-                    {formatTaka(i.price)} ×
+                    {bnTaka(i.price)} ×
                     <button
                       type="button"
                       onClick={() => setQuantity(i.productId, i.quantity - 1, i.variantId)}
@@ -167,7 +169,7 @@ export default function CheckoutPage() {
                     >
                       −
                     </button>
-                    {i.quantity}
+                    {bn(i.quantity)}
                     <button
                       type="button"
                       onClick={() => setQuantity(i.productId, i.quantity + 1, i.variantId)}
@@ -180,7 +182,7 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                 </div>
-                <b className="num">{formatTaka(i.price * i.quantity)}</b>
+                <b className="num">{bnTaka(i.price * i.quantity)}</b>
               </div>
             ))}
           </div>
@@ -205,7 +207,7 @@ export default function CheckoutPage() {
 
         <div className="num flex justify-between border-t border-line pt-3 text-base font-semibold">
           <span>সাবটোটাল</span>
-          <span>{formatTaka(subtotal)}</span>
+          <span>{bnTaka(subtotal)}</span>
         </div>
 
         {error && <p className="mt-3 rounded-lg bg-danger-soft p-2.5 text-sm text-danger">{error}</p>}
@@ -215,7 +217,7 @@ export default function CheckoutPage() {
           disabled={submitting || items.length === 0}
           className="num mt-4 w-full rounded-xl bg-amber py-3.5 font-bold text-white disabled:opacity-50"
         >
-          {submitting ? "অর্ডার হচ্ছে…" : `অর্ডার কনফার্ম করুন · ${formatTaka(subtotal)}`}
+          {submitting ? "অর্ডার হচ্ছে…" : `অর্ডার কনফার্ম করুন · ${bnTaka(subtotal)}`}
         </button>
         <p className="mt-2 flex items-center gap-2 rounded-lg bg-bg p-2.5 text-xs text-muted">
           পেমেন্ট: ক্যাশ অন ডেলিভারি, পণ্য হাতে পেয়ে টাকা দিন

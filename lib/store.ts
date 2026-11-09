@@ -82,7 +82,13 @@ export interface PublicProduct {
   isFeatured: boolean;
   thumbnailUrl: string | null;
   images: string[];
+  // The product's primary category — null when it was only tagged via the
+  // admin's multi-category picker and never given a primary one. `categories`
+  // (below) always has the full set either way, so callers that need a
+  // category name to show should fall back to categories[0] rather than
+  // treating `category: null` as "no category."
   category: { id: string; name: string } | null;
+  categories: { id: string; name: string }[];
   brand: { id: string; name: string } | null;
   inStock: boolean;
   slogan: string | null;
