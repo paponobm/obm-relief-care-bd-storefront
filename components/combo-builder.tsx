@@ -386,12 +386,10 @@ export function ComboBuilder({
                     <ProductArt name={e.name} categoryName={e.categoryName} thumbnailUrl={e.imageUrl} />
                   </Link>
                   <Link href={`/product/${e.slug}`} className="min-w-0 flex-1">
-                    <b className="line-clamp-2 block text-base font-semibold leading-snug text-ink">{e.name}</b>
-                    {e.variantLabel && (
-                      <span className="mt-0.5 inline-block rounded-md bg-leaf-soft px-1.5 py-0.5 text-xs font-semibold text-leaf-deep">
-                        {e.variantLabel}
-                      </span>
-                    )}
+                    <b className="line-clamp-2 block text-base font-semibold leading-snug text-ink">
+                      {e.name}
+                      {e.variantLabel && <span className="text-leaf-deep"> ({e.variantLabel})</span>}
+                    </b>
                     {(e.origin || e.slogan) && (
                       <small className="block truncate text-sm text-muted">
                         {e.origin && (
