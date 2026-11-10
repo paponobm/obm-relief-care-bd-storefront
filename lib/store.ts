@@ -76,12 +76,17 @@ export interface ChannelConfig {
   // actually created. Empty means every buy-box only shows the single
   // quantity-1 tile.
   quantityDiscounts: QuantityDiscount[];
+  // The flat delivery charge (taka) — Settings → Other Settings. Added at
+  // checkout unless a met spendingRewards tier has freeDelivery on, same
+  // real server-enforced waiver. null means no delivery charge at all.
+  deliveryCharge: number | null;
 }
 
 export interface SpendingReward {
   amount: number;
   description: string;
   discountPercent?: number;
+  freeDelivery?: boolean;
 }
 
 export interface QuantityDiscount {

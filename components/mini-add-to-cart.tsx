@@ -27,6 +27,7 @@ export function MiniAddToCart({ product }: { product: PublicProduct }) {
               name: product.name,
               image: product.thumbnailUrl,
               price: product.price,
+              basePrice: product.price,
             },
             1,
           )

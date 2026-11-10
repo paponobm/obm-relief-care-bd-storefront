@@ -42,12 +42,25 @@ export function CartDrawer({
     .filter((p) => !cartIds.has(p.productId))
     .slice(0, 8);
 
+  // "পণ্যে ছাড়" — every line's own quantity-tier reduction (its real
+  // basePrice vs its current, re-tiered price). Labeled with the percent
+  // only when every discounted line shares the same one — a mixed cart
+  // doesn't get a single, potentially-misleading percent slapped on it.
+  // grossTotal (list prices, before any discount) is also the basis for
+  // every eligibility check below (minimum order, reward tiers, free
+  // delivery) and for the reward discount's own amount — matching exactly
+  // what StorefrontService.createOrder computes server-side off its own
+  // gross `subtotal`, so what's shown here is never more generous than
+  // what the order actually gets charged.
+  const grossTotal = items.reduce((sum, i) => sum + (i.basePrice ?? i.price) * i.quantity, 0);
+  const itemSavings = grossTotal - subtotal;
+
   // Settings → Other Settings → Minimum order amount. null/0 means no
   // minimum, same "omitted = off" convention as every other channel config
   // on this page — the checkout button only ever gates on a real admin value.
   const minimum = channel.minimumOrderAmount;
-  const remaining = minimum ? Math.max(0, minimum - subtotal) : 0;
-  const metMinimum = !minimum || subtotal >= minimum;
+  const remaining = minimum ? Math.max(0, minimum - grossTotal) : 0;
+  const metMinimum = !minimum || grossTotal >= minimum;
 
   // Settings → Other Settings → Spend-more rewards. Shown only once the
   // minimum order (above) is met, as a single box with a single bar —
@@ -55,29 +68,51 @@ export function CartDrawer({
   // out of reach) the next one's "আর ৳X নিলে …" prompt, all in one line; the
   // bar fills toward the next tier, or sits full once every tier is met.
   const rewardTiers = channel.spendingRewards;
-  const metRewardTiers = rewardTiers.filter((t) => subtotal >= t.amount);
-  const nextRewardTier = rewardTiers.find((t) => subtotal < t.amount);
+  const metRewardTiers = rewardTiers.filter((t) => grossTotal >= t.amount);
+  const nextRewardTier = rewardTiers.find((t) => grossTotal < t.amount);
   const rewardMessage = [
     ...metRewardTiers.map((t) => `অভিনন্দন! আপনি ${t.description} পাচ্ছেন`),
     ...(nextRewardTier
       ? [
-          `আর ${bnTaka(nextRewardTier.amount - subtotal)} এর পণ্য নিলে ${nextRewardTier.description}!`,
+          `আর ${bnTaka(nextRewardTier.amount - grossTotal)} এর পণ্য নিলে ${nextRewardTier.description}!`,
         ]
       : []),
   ].join(", ");
   const rewardBarPercent = nextRewardTier
-    ? Math.min(100, (subtotal / nextRewardTier.amount) * 100)
+    ? Math.min(100, (grossTotal / nextRewardTier.amount) * 100)
     : 100;
 
   // The one real part of spendingRewards: the highest-amount tier the
-  // subtotal already qualifies for that set a discount %, same "best tier
+  // order already qualifies for that set a discount %, same "best tier
   // wins, not stacked" rule the backend applies when the order is created.
   const discountTier = [...metRewardTiers]
     .reverse()
     .find((t) => (t.discountPercent ?? 0) > 0);
   const discountAmount = discountTier
-    ? Math.round((subtotal * discountTier.discountPercent!) / 100)
+    ? Math.round((grossTotal * discountTier.discountPercent!) / 100)
     : 0;
+
+  const itemDiscountPercents = Array.from(
+    new Set(
+      items
+        .filter((i) => i.basePrice !== undefined && i.basePrice > i.price)
+        .map((i) => Math.round(((i.basePrice! - i.price) / i.basePrice!) * 100)),
+    ),
+  );
+  const itemSavingsLabel = itemDiscountPercents.length === 1 ? `${bn(itemDiscountPercents[0])}%` : "";
+
+  // "পরিমাণে ছাড়" — the spend-more reward discount above. Labeled with
+  // whichever reward tiers are already met (e.g. "ফ্রি ডেলিভারি + ১৫%ছাড়"),
+  // the same real admin-written descriptions shown in the reward box.
+  const savingsLabel = metRewardTiers.map((t) => t.description).join(" + ");
+
+  // "ডেলিভারি চার্জ" — Settings → Other Settings → Delivery charge, waived
+  // (shown as ফ্রি) whenever a met reward tier has Free delivery ticked —
+  // the exact same rule StorefrontService.createOrder applies server-side.
+  const metFreeDelivery = metRewardTiers.some((t) => t.freeDelivery);
+  const deliveryCharge = channel.deliveryCharge && !metFreeDelivery ? channel.deliveryCharge : 0;
+  const showDeliveryLine = Boolean(channel.deliveryCharge);
+  const finalTotal = grossTotal - itemSavings - discountAmount + deliveryCharge;
 
   // "৫% ছাড় পাচ্ছেন · আর ১টা নিলে ১০%" — only for lines whose price actually
   // re-tiers on quantity change (basePrice set, see lib/cart.tsx). Combines
@@ -348,21 +383,33 @@ export function CartDrawer({
           </div>
         ) : (
           <div className="border-t border-line px-4 py-3.5">
-            {discountAmount > 0 ? (
+            {itemSavings > 0 || discountAmount > 0 || showDeliveryLine ? (
               <>
                 <div className="num mb-1 flex items-center justify-between text-sm text-muted">
-                  <span>সাবটোটাল</span>
-                  <span className="font-sans">{bnTaka(subtotal)}</span>
+                  <span className="font-semibold text-leaf">পণ্যের মূল দাম</span>
+                  <span className="font-sans font-semibold text-leaf">{bnTaka(grossTotal)}</span>
                 </div>
-                <div className="num mb-1 flex items-center justify-between text-sm text-leaf-deep">
-                  <span>ছাড় ({bn(discountTier!.discountPercent!)}%)</span>
-                  <span className="font-sans">-{bnTaka(discountAmount)}</span>
-                </div>
+                {itemSavings > 0 && (
+                  <div className="num mb-1 flex items-center justify-between text-sm text-danger">
+                    <span className="font-semibold font-sans">পণ্যে ছাড়{itemSavingsLabel ? `(${itemSavingsLabel})` : ""}</span>
+                    <span className="font-sans font-semibold ">-{bnTaka(itemSavings)}</span>
+                  </div>
+                )}
+                {discountAmount > 0 && (
+                  <div className="num mb-1 flex items-center justify-between text-sm text-danger">
+                    <span className="font-semibold font-sans">পরিমাণে ছাড়{savingsLabel ? ` (${savingsLabel})` : ""}</span>
+                    <span className="font-sans font-semibold">-{bnTaka(discountAmount)}</span>
+                  </div>
+                )}
+                {showDeliveryLine && (
+                  <div className="num mb-1 flex items-center justify-between text-sm text-muted">
+                    <span className="font-semibold text-leaf">ডেলিভারি চার্জ</span>
+                    <span className="font-sans font-bold text-bold text-black">{deliveryCharge > 0 ? bnTaka(deliveryCharge) : "ফ্রি"}</span>
+                  </div>
+                )}
                 <div className="num mb-3 flex items-center justify-between text-base font-semibold">
-                  <span>মোট</span>
-                  <span className="text-amber-deep font-sans">
-                    {bnTaka(subtotal - discountAmount)}
-                  </span>
+                  <span>সাবটোটাল</span>
+                  <span className="text-amber-deep font-sans">{bnTaka(finalTotal)}</span>
                 </div>
               </>
             ) : (
@@ -379,7 +426,7 @@ export function CartDrawer({
                 onClick={onClose}
                 className="block rounded-xl bg-amber py-3 text-center font-bold text-white"
               >
-                চেকআউট করুন
+               অর্ডার করুন →
               </Link>
             ) : (
               <button
