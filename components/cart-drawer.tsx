@@ -113,6 +113,7 @@ export function CartDrawer({
   const deliveryCharge = channel.deliveryCharge && !metFreeDelivery ? channel.deliveryCharge : 0;
   const showDeliveryLine = Boolean(channel.deliveryCharge);
   const finalTotal = grossTotal - itemSavings - discountAmount + deliveryCharge;
+  const totalSavings = itemSavings + discountAmount;
 
   // "৫% ছাড় পাচ্ছেন · আর ১টা নিলে ১০%" — only for lines whose price actually
   // re-tiers on quantity change (basePrice set, see lib/cart.tsx). Combines
@@ -411,6 +412,11 @@ export function CartDrawer({
                   <span>সাবটোটাল</span>
                   <span className="text-amber-deep font-sans">{bnTaka(finalTotal)}</span>
                 </div>
+                {totalSavings > 0 && (
+                  <p className=" font-sans num mb-3 rounded-lg bg-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
+                    এই অর্ডারে আপনি মোট {bnTaka(totalSavings)} সাশ্রয় করছেন
+                  </p>
+                )}
               </>
             ) : (
               <div className="num mb-3 flex items-center justify-between text-base font-semibold">
