@@ -59,6 +59,35 @@ export interface ChannelConfig {
   comboBanners: ComboBannerConfig[];
   customerCarePhone: string | null;
   socialLinks: SocialLink[];
+  // The cart drawer's minimum-order nudge/gate (taka) — Settings → Other
+  // Settings. null means no minimum, same as every other omitted-config
+  // fallback on this page.
+  minimumOrderAmount: number | null;
+  // The cart drawer's stacked spend-more nudges (e.g. ৳1,300 → "ফ্রি
+  // ডেলিভারি", ৳2,000 → "১০% ছাড়") — Settings → Other Settings. Shown lowest
+  // amount first. `description` is just display text; `discountPercent` is
+  // the one real part — the backend applies it (highest-amount qualifying
+  // tier wins) when the order is actually created. Empty means nothing shows.
+  spendingRewards: SpendingReward[];
+  // The product page's buy-box quantity tiers (e.g. 2 → 5% off, 3 → 10%
+  // off) — Settings → Other Settings. Shown lowest quantity first;
+  // quantity 1 is always the free baseline tile and isn't listed here.
+  // `discountPercent` is real — applied per line item when the order is
+  // actually created. Empty means every buy-box only shows the single
+  // quantity-1 tile.
+  quantityDiscounts: QuantityDiscount[];
+}
+
+export interface SpendingReward {
+  amount: number;
+  description: string;
+  discountPercent?: number;
+}
+
+export interface QuantityDiscount {
+  quantity: number;
+  discountPercent: number;
+  description?: string;
 }
 
 export async function getChannelConfig(): Promise<ChannelConfig> {

@@ -2,34 +2,36 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useCart } from "@/lib/cart";
+import { qtyDiscountRate, useCart } from "@/lib/cart";
 import { WHATSAPP_NUMBER, type PublicProduct } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 import { bnTaka } from "./product-deal-card";
 
-const QUICK_QTYS = [1, 2, 3];
-
-// Site-wide bulk-order pricing: 2 of the same item gets 5% off, 3 or more
-// gets 10% off. Applies to every product's buy box the same way.
-function qtyDiscountRate(n: number) {
-  if (n >= 3) return 0.1;
-  if (n === 2) return 0.05;
-  return 0;
-}
-
 export function AddToCart({ product }: { product: PublicProduct }) {
-  const { add } = useCart();
+  const { add, quantityDiscounts } = useCart();
   const router = useRouter();
+  // Quantity 1 is always the free baseline tile; one more tile per
+  // admin-configured tier (Settings → Other Settings → Quantity discounts).
+  const QUICK_QTYS = [1, ...quantityDiscounts.map((t) => t.quantity)].sort(
+    (a, b) => a - b,
+  );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
   const variants = product.hasVariants ? (product.variants ?? []) : [];
-  const [variantId, setVariantId] = useState(() => variants.find((v) => v.isDefault)?.id ?? variants[0]?.id);
+  const [variantId, setVariantId] = useState(
+    () => variants.find((v) => v.isDefault)?.id ?? variants[0]?.id,
+  );
   const selected = variants.find((v) => v.id === variantId) ?? null;
 
   const price = selected?.price ?? product.price;
-  const compareAtPrice = selected ? selected.compareAtPrice : product.compareAtPrice;
-  const discount = compareAtPrice && compareAtPrice > price ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100) : 0;
+  const compareAtPrice = selected
+    ? selected.compareAtPrice
+    : product.compareAtPrice;
+  const discount =
+    compareAtPrice && compareAtPrice > price
+      ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
+      : 0;
   const inStock = selected ? selected.inStock : product.inStock;
 
   const specBullets = (product.specifications ?? []).filter(
@@ -44,7 +46,8 @@ export function AddToCart({ product }: { product: PublicProduct }) {
       slug: product.slug,
       name: product.name,
       image: selected?.imageUrl ?? product.thumbnailUrl,
-      price: Math.round(price * (1 - qtyDiscountRate(qty))),
+      price: Math.round(price * (1 - qtyDiscountRate(qty, quantityDiscounts))),
+      basePrice: price,
     };
   }
 
@@ -67,7 +70,9 @@ export function AddToCart({ product }: { product: PublicProduct }) {
       {product.hasVariants && variants.length > 0 && (
         <>
           <div className="num flex items-baseline gap-2">
-            <b className="font-display text-2xl text-amber-deep">{bnTaka(price)}</b>
+            <b className="font-display text-2xl text-amber-deep">
+              {bnTaka(price)}
+            </b>
             {compareAtPrice ? (
               <>
                 <s className="text-sm text-muted">{bnTaka(compareAtPrice)}</s>
@@ -86,7 +91,9 @@ export function AddToCart({ product }: { product: PublicProduct }) {
                 type="button"
                 onClick={() => setVariantId(v.id)}
                 className={`rounded-lg border px-3.5 py-2 text-sm font-semibold ${
-                  v.id === variantId ? "border-leaf bg-leaf text-white" : "border-line text-ink"
+                  v.id === variantId
+                    ? "border-leaf bg-leaf text-white"
+                    : "border-line text-ink"
                 }`}
               >
                 {v.label ?? "ভ্যারিয়েন্ট"}
@@ -100,7 +107,8 @@ export function AddToCart({ product }: { product: PublicProduct }) {
         {/* <p className="mb-1.5 text-sm font-semibold text-ink">পরিমাণ বাছাই করুন</p> */}
         <div className="grid grid-cols-3 gap-2">
           {QUICK_QTYS.map((n) => {
-            const rate = qtyDiscountRate(n);
+            const tier = quantityDiscounts.find((t) => t.quantity === n);
+            const rate = qtyDiscountRate(n, quantityDiscounts);
             const unit = Math.round(price * (1 - rate));
             const total = unit * n;
             return (
@@ -108,15 +116,18 @@ export function AddToCart({ product }: { product: PublicProduct }) {
                 key={n}
                 type="button"
                 onClick={() => setQty(n)}
-                className={`rounded-xl border py-2.5 text-center ${
-                  qty === n ? "border-leaf bg-leaf-soft" : "border-line"
+                className={`rounded-xl border bg-leaf-soft py-2.5 text-center ${
+                  qty === n ? "border-leaf" : "border-line"
                 }`}
               >
                 <span className="num block text-sm font-bold text-ink">
                   {bn(n)}টি {bnTaka(total)}
                 </span>
                 <span className="num block text-[11px] text-muted">
-                  {rate > 0 ? `${bn(Math.round(rate * 100))}% বাড়তি ছাড়` : "একটি"}
+                  {tier
+                    ? (tier.description ??
+                      `${bn(tier.discountPercent)}% বাড়তি ছাড়`)
+                    : "একটি"}
                 </span>
               </button>
             );
@@ -134,7 +145,9 @@ export function AddToCart({ product }: { product: PublicProduct }) {
         <li>ক্যাশ অন ডেলিভারি</li>
       </ul>
 
-      <p className={`text-sm font-semibold ${inStock ? "text-leaf-deep" : "text-danger"}`}>
+      <p
+        className={`text-sm font-semibold ${inStock ? "text-leaf-deep" : "text-danger"}`}
+      >
         {inStock ? "স্টকে আছে" : "স্টকে নেই"}
       </p>
 
@@ -146,7 +159,11 @@ export function AddToCart({ product }: { product: PublicProduct }) {
         >
           {added ? "কার্টে যোগ হয়েছে" : "কার্টে যোগ করুন"}
         </button>
-        <button type="button" onClick={handleBuyNow} className="rounded-xl bg-amber py-3 font-semibold text-white">
+        <button
+          type="button"
+          onClick={handleBuyNow}
+          className="rounded-xl bg-amber py-3 font-semibold text-white"
+        >
           এখনই কিনুন
         </button>
       </div>

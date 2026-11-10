@@ -119,7 +119,7 @@ export function SideMenu({
             </span>
           )}
           <span className="min-w-0 flex-1">
-            <b className="font-display block text-lg leading-tight text-leaf-deep">
+            <b className="font-display block text-lg leading-tight text-white">
               Relief Care <span className="text-[#FFC069]">bd</span>
             </b>
             {/* Static for now — real account/auth isn't built yet. */}

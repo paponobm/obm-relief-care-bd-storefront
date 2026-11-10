@@ -7,12 +7,14 @@ import { useCart } from "@/lib/cart";
 import type { ChannelConfig, PublicCategory } from "@/lib/store";
 import { ThemeToggle } from "./theme-toggle";
 import { SideMenu } from "./side-menu";
+import { CartDrawer } from "./cart-drawer";
 
 export function Header({ channel, categories }: { channel: ChannelConfig; categories: PublicCategory[] }) {
   const { count } = useCart();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -78,8 +80,9 @@ export function Header({ channel, categories }: { channel: ChannelConfig; catego
 
         <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0 lg:flex-1 lg:justify-end">
           <ThemeToggle />
-          <Link
-            href="/checkout"
+          <button
+            type="button"
+            onClick={() => setCartOpen(true)}
             className="flex items-center gap-2 rounded-full bg-amber px-4 py-2.5 text-sm font-semibold text-white"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -92,7 +95,7 @@ export function Header({ channel, categories }: { channel: ChannelConfig; catego
                 {count}
               </span>
             )}
-          </Link>
+          </button>
         </div>
       </div>
       {/* <nav className="scrollbar-none mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-2.5 text-sm xl:px-8">
@@ -110,6 +113,7 @@ export function Header({ channel, categories }: { channel: ChannelConfig; catego
         </Link>
       </nav> */}
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} channel={channel} categories={categories} />
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} channel={channel} />
     </header>
   );
 }

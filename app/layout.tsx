@@ -25,6 +25,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     comboBanners: [],
     customerCarePhone: null,
     socialLinks: [],
+    minimumOrderAmount: null,
+    spendingRewards: [],
+    quantityDiscounts: [],
   }));
   const categories = await getCategories().catch(() => []);
 
@@ -35,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-screen bg-bg text-ink antialiased">
         <ThemeProvider>
-          <CartProvider>
+          <CartProvider quantityDiscounts={channel.quantityDiscounts}>
             <Header channel={channel} categories={categories} />
             <main className="mx-auto max-w-7xl px-4 py-6 xl:px-8">{children}</main>
             <Footer />
