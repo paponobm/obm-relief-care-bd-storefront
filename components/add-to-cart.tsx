@@ -155,7 +155,7 @@ export function AddToCart({ product }: { product: PublicProduct }) {
         <button
           type="button"
           onClick={handleAdd}
-          className="rounded-xl border border-leaf py-3 font-semibold text-leaf-deep"
+          className="rounded-xl border border-leaf text-leaf py-3 font-semibold text-[var(--cta-text)]"
         >
           {added ? "কার্টে যোগ হয়েছে" : "কার্টে যোগ করুন"}
         </button>
@@ -168,19 +168,24 @@ export function AddToCart({ product }: { product: PublicProduct }) {
         </button>
       </div>
 
-      {WHATSAPP_NUMBER && (
-        <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`এই পণ্যটি নিয়ে জানতে চাই: ${product.name}`)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 rounded-xl border border-leaf py-2.5 text-sm font-semibold text-leaf-deep"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.76.46 3.48 1.34 5l-1.42 5.18 5.3-1.39a9.96 9.96 0 0 0 4.78 1.22h.01c5.52 0 10-4.48 10-10s-4.49-10.01-10.01-10.01zm0 18.17h-.01a8.14 8.14 0 0 1-4.15-1.14l-.3-.18-3.08.81.83-3-.2-.31a8.16 8.16 0 0 1-1.26-4.35c0-4.51 3.67-8.18 8.19-8.18 2.19 0 4.24.85 5.79 2.4a8.13 8.13 0 0 1 2.4 5.79c0 4.52-3.68 8.16-8.21 8.16zm4.48-6.12c-.25-.12-1.46-.72-1.68-.8-.23-.08-.39-.12-.56.13-.17.25-.64.8-.78.96-.14.17-.29.19-.53.06-.25-.12-1.03-.38-1.97-1.21-.73-.65-1.22-1.46-1.37-1.7-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.47-.01-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.07s.89 2.4 1.02 2.57c.12.17 1.75 2.67 4.25 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.46-.6 1.67-1.17.2-.58.2-1.07.14-1.17-.06-.11-.23-.17-.48-.29z" />
-          </svg>
-          এই পণ্য নিয়ে হোয়াটসঅ্যাপে জিজ্ঞেস করুন
-        </a>
-      )}
+      <a
+        // No real WhatsApp number is configured yet (lib/store.ts) — this
+        // stays a plain, non-navigating UI element (no href) until one is
+        // added, rather than linking to a fake/broken wa.me URL.
+        {...(WHATSAPP_NUMBER
+          ? {
+              href: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`এই পণ্যটি নিয়ে জানতে চাই: ${product.name}`)}`,
+              target: "_blank",
+              rel: "noopener noreferrer",
+            }
+          : {})}
+        className="flex items-center justify-center gap-2 rounded-xl border border-leaf py-2.5 text-sm font-semibold text-leaf-deep"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.76.46 3.48 1.34 5l-1.42 5.18 5.3-1.39a9.96 9.96 0 0 0 4.78 1.22h.01c5.52 0 10-4.48 10-10s-4.49-10.01-10.01-10.01zm0 18.17h-.01a8.14 8.14 0 0 1-4.15-1.14l-.3-.18-3.08.81.83-3-.2-.31a8.16 8.16 0 0 1-1.26-4.35c0-4.51 3.67-8.18 8.19-8.18 2.19 0 4.24.85 5.79 2.4a8.13 8.13 0 0 1 2.4 5.79c0 4.52-3.68 8.16-8.21 8.16zm4.48-6.12c-.25-.12-1.46-.72-1.68-.8-.23-.08-.39-.12-.56.13-.17.25-.64.8-.78.96-.14.17-.29.19-.53.06-.25-.12-1.03-.38-1.97-1.21-.73-.65-1.22-1.46-1.37-1.7-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.47-.01-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.07s.89 2.4 1.02 2.57c.12.17 1.75 2.67 4.25 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.46-.6 1.67-1.17.2-.58.2-1.07.14-1.17-.06-.11-.23-.17-.48-.29z" />
+        </svg>
+        এই পণ্য নিয়ে হোয়াটসঅ্যাপে জিজ্ঞেস করুন
+      </a>
     </div>
   );
 }

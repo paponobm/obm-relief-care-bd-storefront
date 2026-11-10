@@ -62,7 +62,7 @@ const country = importCountry(product);
 
         {product.hasVariants ? (
           <div className="num mt-auto flex items-baseline gap-1">
-            <b className="font-display font-bold text-base text-lg text-orange-600">
+            <b className="font-display font-bold text-base text-lg text-amber-deep">
               {bnTaka(product.minPrice ?? product.price)}
               {product.maxPrice !== undefined && product.maxPrice !== product.minPrice
                 ? `–${bnTaka(product.maxPrice)}`
@@ -71,7 +71,7 @@ const country = importCountry(product);
           </div>
         ) : (
           <div className="num mt-auto flex items-baseline gap-2">
-            <b className="font-display font-bold text-base text-lg text-orange-600">{bnTaka(product.price)}</b>
+            <b className="font-display font-bold text-base text-lg text-amber-deep">{bnTaka(product.price)}</b>
             {product.compareAtPrice ? <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s> : null}
           </div>
         )}

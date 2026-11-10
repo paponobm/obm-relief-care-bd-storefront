@@ -75,7 +75,7 @@ export function ProductDealCard({ product }: { product: PublicProduct }) {
 
         {product.hasVariants ? (
           <div className="num mt-auto flex items-baseline gap-1">
-            <b className="font-display font-bold text-base text-lg text-orange-600">
+            <b className="font-display font-bold text-base text-lg text-amber-deep">
               {bnTaka(product.minPrice ?? product.price)}
               {product.maxPrice !== undefined && product.maxPrice !== product.minPrice
                 ? `–${bnTaka(product.maxPrice)}`
@@ -84,7 +84,7 @@ export function ProductDealCard({ product }: { product: PublicProduct }) {
           </div>
         ) : (
           <div className="num mt-auto flex items-baseline gap-2">
-            <b className="font-display font-bold text-base text-lg text-orange-600">{bnTaka(product.price)}</b>
+            <b className="font-display font-bold text-base text-lg text-amber-deep">{bnTaka(product.price)}</b>
             {product.compareAtPrice ? <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s> : null}
           </div>
         )}
@@ -95,7 +95,7 @@ export function ProductDealCard({ product }: { product: PublicProduct }) {
           // variant isn't a one-tap add.
           <Link
             href={`/product/${product.slug}`}
-            className="block w-full rounded-lg border border-leaf bg-transparent py-1.5 text-center text-md font-semibold text-leaf"
+            className="block w-full rounded-lg border border-orange bg-transparent py-1.5 text-center text-md font-semibold text-leaf"
           >
             {product.variantOptionLabel
               ? `${bn(product.variantCount ?? 0)}টি ${product.variantOptionLabel}`
