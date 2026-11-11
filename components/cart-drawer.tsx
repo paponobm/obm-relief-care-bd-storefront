@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { type CartItem, useCart } from "@/lib/cart";
+import { toast, type CartItem, useCart } from "@/lib/cart";
 import {
   getFlashSale,
   type ChannelConfig,
@@ -31,6 +31,11 @@ export function CartDrawer({
   const router = useRouter();
   const combo = channel.comboBanners[0];
   const [crossSell, setCrossSell] = useState<PublicProduct[]>([]);
+  // Dismissible per drawer session (resets on a fresh page load, same as
+  // every other piece of this drawer's own local state) — the customer can
+  // hide the "নিজের কম্বো বানান" prompt without it ever being able to block
+  // anything real underneath it.
+  const [comboPromoDismissed, setComboPromoDismissed] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -202,9 +207,13 @@ export function CartDrawer({
   const metFreeDelivery = metRewardTiers.some((t) => t.freeDelivery) || comboFreeDelivery;
   const deliveryCharge = channel.deliveryCharge && !metFreeDelivery ? channel.deliveryCharge : 0;
   const showDeliveryLine = Boolean(channel.deliveryCharge);
+  // The real delivery charge even when waived — shown as "৳100 (ফ্রি)"
+  // instead of a bare "ফ্রি" so the actual taka amount being saved is never
+  // hidden, and folded into totalSavings below for the same reason.
+  const deliverySavings = metFreeDelivery ? (channel.deliveryCharge ?? 0) : 0;
 
   const finalTotal = grossTotal - itemSavings - discountAmount - comboDiscountTotal + deliveryCharge;
-  const totalSavings = itemSavings + discountAmount + comboDiscountTotal;
+  const totalSavings = itemSavings + discountAmount + comboDiscountTotal + deliverySavings;
 
   // "কম্বো এডিট করুন" — sends this group's lines back into the combo builder
   // (same shape ComboBuilder.readCombo expects) and off the main cart, so
@@ -243,7 +252,8 @@ export function CartDrawer({
     window.dispatchEvent(new Event("relief-care:combo-updated"));
   }
   function removeCombo(groupItems: CartItem[]) {
-    groupItems.forEach((i) => remove(i.productId, i.variantId));
+    groupItems.forEach((i) => remove(i.productId, i.variantId, { silent: true }));
+    toast("কার্ট থেকে ডিলিট হয়েছে");
   }
 
   // "৫% ছাড় পাচ্ছেন · আর ১টা নিলে ১০%" — only for lines whose price actually
@@ -326,13 +336,17 @@ export function CartDrawer({
 
           {items.length > 0 && metMinimum && rewardTiers.length > 0 && (
             <div
-              className={`mb-3.5 rounded-xl border px-3.5 py-3 ${
-                nextRewardTier ? "border-amber bg-amber-soft" : "border-leaf bg-leaf-soft"
-              }`}
+              // className={`mb-3.5 rounded-xl border px-3.5 py-3 ${
+              //   nextRewardTier ? " bg-leaf-soft" : " bg-leaf-soft"
+              // }`}
+
+               className={`mb-3.5 rounded-xl border px-3.5 py-3 `}
+              
+
             >
               <p
                 className={`text-[13px] font-sans font-semibold ${
-                  nextRewardTier ? "text-amber-deep" : "text-leaf-deep"
+                  nextRewardTier ? "text-white-soft" : "text-leaf-deep"
                 }`}
               >
                 {rewardMessage}
@@ -346,12 +360,24 @@ export function CartDrawer({
             </div>
           )}
 
-          {combo && comboGroups.length === 0 && (
+          {combo && comboGroups.length === 0 && !comboPromoDismissed && (
             <Link
               href="/combo"
               onClick={onClose}
-              className="mb-3.5 flex flex-col gap-0.5 rounded-xl border border-amber bg-amber-soft px-3.5 py-3"
+              className="relative mb-3.5 flex flex-col gap-0.5 rounded-xl border border-amber bg-amber-soft px-3.5 py-3 pr-9"
             >
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setComboPromoDismissed(true);
+                }}
+                aria-label="বন্ধ করুন"
+                className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/5 text-sm text-amber-deep"
+              >
+                ×
+              </button>
               <b className="font-display text-base text-amber-deep">
                 {combo.title}
               </b>
@@ -483,49 +509,52 @@ export function CartDrawer({
                                 {tier.text}
                               </p>
                             ))}
-                          <button
-                            type="button"
-                            onClick={() => remove(i.productId, i.variantId)}
-                            className="mt-0.5 block text-xs font-semibold text-muted underline font-sans"
-                          >
-                            সরান
-                          </button>
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-line-hard">
+                      <div className="flex shrink-0 flex-col items-end gap-1">
                         <button
                           type="button"
-                          onClick={() =>
-                            i.quantity <= 1
-                              ? remove(i.productId, i.variantId)
-                              : setQuantity(
-                                  i.productId,
-                                  i.quantity - 1,
-                                  i.variantId,
-                                )
-                          }
-                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-ink"
-                          aria-label="কমান"
+                          onClick={() => remove(i.productId, i.variantId)}
+                          aria-label={`${i.name} সরান`}
+                          className="text-base font-bold leading-none text-danger"
                         >
-                          −
+                          ×
                         </button>
-                        <span className="num w-6 text-center text-xs font-semibold text-ink font-sans">
-                          {bn(i.quantity)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setQuantity(
-                              i.productId,
-                              i.quantity + 1,
-                              i.variantId,
-                            )
-                          }
-                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-leaf-deep"
-                          aria-label="বাড়ান"
-                        >
-                          +
-                        </button>
+                        <div className="flex items-center overflow-hidden rounded-lg border border-line-hard">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              i.quantity <= 1
+                                ? remove(i.productId, i.variantId)
+                                : setQuantity(
+                                    i.productId,
+                                    i.quantity - 1,
+                                    i.variantId,
+                                  )
+                            }
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-ink"
+                            aria-label="কমান"
+                          >
+                            −
+                          </button>
+                          <span className="num w-6 text-center text-xs font-semibold text-ink font-sans">
+                            {bn(i.quantity)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setQuantity(
+                                i.productId,
+                                i.quantity + 1,
+                                i.variantId,
+                              )
+                            }
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-leaf-deep"
+                            aria-label="বাড়ান"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -591,7 +620,9 @@ export function CartDrawer({
                 {showDeliveryLine && (
                   <div className="num mb-1 flex items-center justify-between text-sm text-muted">
                     <span className="font-semibold text-leaf">ডেলিভারি চার্জ</span>
-                    <span className="font-sans font-bold text-bold text-black">{deliveryCharge > 0 ? bnTaka(deliveryCharge) : "ফ্রি"}</span>
+                    <span className="font-sans font-bold text-bold text-black">
+                      {deliveryCharge > 0 ? bnTaka(deliveryCharge) : `${bnTaka(channel.deliveryCharge ?? 0)} (ফ্রি)`}
+                    </span>
                   </div>
                 )}
                 <div className="num mb-3 flex items-center justify-between text-base font-semibold">

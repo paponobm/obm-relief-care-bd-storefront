@@ -6,6 +6,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { WhatsappWidget } from "@/components/whatsapp-widget";
 import { QuickViewModal } from "@/components/quick-view-modal";
+import { ToastHost } from "@/components/toast-host";
 import { getCategories, getChannelConfig, STORE_NAME } from "@/lib/store";
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Footer />
             <WhatsappWidget />
             <QuickViewModal />
+            <ToastHost />
           </CartProvider>
         </ThemeProvider>
       </body>

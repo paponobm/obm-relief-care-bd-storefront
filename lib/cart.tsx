@@ -59,18 +59,40 @@ function tierPrice(
   return Math.round(basePrice * (1 - qtyDiscountRate(quantity, tiers)));
 }
 
+// Same window-event idiom as "relief-care:open-cart"/"relief-care:quick-view"
+// — ToastHost (mounted once in layout.tsx) is the only listener, so add()/
+// remove() below can fire one from anywhere, including from outside a
+// component's render (e.g. a plain event handler), without needing a hook.
+// Exported so a caller that removes several lines as one user action (e.g.
+// CartDrawer's "কম্বো সরান") can pass `{ silent: true }` to every individual
+// remove() and fire just this one toast for the whole action instead.
+export function toast(message: string) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("relief-care:toast", { detail: message }));
+  }
+}
+
+interface CartMutationOptions {
+  // Combo-builder's own bulk reshuffling (moving lines in/out of a combo,
+  // replacing a group on edit) calls add()/remove() several times for what
+  // is, from the customer's point of view, one single action — already
+  // covered by its own "opened the cart"/"opened the builder" feedback, so
+  // those calls pass this to skip the otherwise-automatic toast.
+  silent?: boolean;
+}
+
 interface CartContextValue {
   items: CartItem[];
   count: number;
   subtotal: number;
   quantityDiscounts: QuantityDiscount[];
-  add: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
+  add: (item: Omit<CartItem, "quantity">, quantity?: number, options?: CartMutationOptions) => void;
   setQuantity: (
     productId: string,
     quantity: number,
     variantId?: string,
   ) => void;
-  remove: (productId: string, variantId?: string) => void;
+  remove: (productId: string, variantId?: string, options?: CartMutationOptions) => void;
   clear: () => void;
 }
 
@@ -121,7 +143,7 @@ export function CartProvider({
     }
   }
 
-  function add(item: Omit<CartItem, "quantity">, quantity = 1) {
+  function add(item: Omit<CartItem, "quantity">, quantity = 1, options?: CartMutationOptions) {
     setItems((prev) => {
       const existing = prev.find((x) => sameLine(x, item));
       const next = existing
@@ -143,6 +165,7 @@ export function CartProvider({
       persist(next);
       return next;
     });
+    if (!options?.silent) toast("কার্টে যোগ হয়েছে");
   }
 
   function setQuantity(
@@ -168,12 +191,13 @@ export function CartProvider({
     });
   }
 
-  function remove(productId: string, variantId?: string) {
+  function remove(productId: string, variantId?: string, options?: CartMutationOptions) {
     setItems((prev) => {
       const next = prev.filter((x) => !sameLine(x, { productId, variantId }));
       persist(next);
       return next;
     });
+    if (!options?.silent) toast("কার্ট থেকে ডিলিট হয়েছে");
   }
 
   function clear() {

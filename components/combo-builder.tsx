@@ -149,7 +149,9 @@ export function ComboBuilder({
   // can't fire from just emptying a combo you're building from scratch.
   useEffect(() => {
     if (!editingGroupId || combo.length > 0) return;
-    cart.items.filter((i) => i.comboGroupId === editingGroupId).forEach((i) => cart.remove(i.productId, i.variantId));
+    cart.items
+      .filter((i) => i.comboGroupId === editingGroupId)
+      .forEach((i) => cart.remove(i.productId, i.variantId, { silent: true }));
     clearEditingGroup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingGroupId, combo.length]);
@@ -308,7 +310,7 @@ export function ComboBuilder({
       persistCombo(next);
       return next;
     });
-    movable.forEach((item) => cart.remove(item.productId, item.variantId));
+    movable.forEach((item) => cart.remove(item.productId, item.variantId, { silent: true }));
   }
 
   function confirmCombo() {
@@ -317,7 +319,9 @@ export function ComboBuilder({
     // replaced here, in one step, instead of briefly having neither or both
     // in the cart.
     if (editingGroupId) {
-      cart.items.filter((i) => i.comboGroupId === editingGroupId).forEach((i) => cart.remove(i.productId, i.variantId));
+      cart.items
+        .filter((i) => i.comboGroupId === editingGroupId)
+        .forEach((i) => cart.remove(i.productId, i.variantId, { silent: true }));
     }
     // One id shared by every line in this combo — CartDrawer groups by it to
     // render a single "নিজের কম্বো" card, and the real discount tier (if the
@@ -338,6 +342,7 @@ export function ComboBuilder({
           comboGroupId,
         },
         item.quantity,
+        { silent: true },
       ),
     );
     setCombo([]);

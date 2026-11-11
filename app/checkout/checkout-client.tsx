@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type CartItem, useCart } from "@/lib/cart";
+import { toast, type CartItem, useCart } from "@/lib/cart";
 import { placeOrder, saveCheckoutLead, WHATSAPP_NUMBER, type ChannelConfig, type CreatedOrder, type PublicProduct } from "@/lib/store";
 import { ProductArt } from "@/components/product-art";
 import { bnTaka } from "@/components/product-deal-card";
+import { RewardCelebration } from "@/components/reward-celebration";
 import { bn, bnToNumber } from "@/lib/bn-digits";
 
 const PHONE_RE = /^01\d{9}$/;
@@ -51,6 +52,42 @@ export function CheckoutClient({
   const discountTier = [...metRewardTiers].reverse().find((t) => (t.discountPercent ?? 0) > 0);
   const rewardDiscountPercent = discountTier?.discountPercent ?? 0;
 
+  const itemDiscountPercents = Array.from(
+    new Set(
+      items
+        .filter((i) => i.basePrice !== undefined && i.basePrice > i.price)
+        .map((i) => Math.round(((i.basePrice! - i.price) / i.basePrice!) * 100)),
+    ),
+  );
+  const itemSavingsLabel = itemDiscountPercents.length === 1 ? `${bn(itemDiscountPercents[0])}%` : "";
+
+  // A real, already-earned discount gets a one-time confetti celebration on
+  // this page — never for "almost there" (nextTier) states, only for what's
+  // actually been reached. That includes a channel-wide spend-more reward
+  // AND a plain per-product quantity-tier discount (Settings → Other
+  // Settings → Quantity discounts) — both are real money off, so both earn
+  // it, not just the spend-more one. celebratedRef stops it firing again if
+  // items change later and briefly dip below a tier before coming back, or
+  // on an unrelated re-render — once per page visit is enough.
+  const [showCelebration, setShowCelebration] = useState(false);
+  const celebratedRef = useRef(false);
+  // One combined sentence even when 2+ things are true at once (e.g. "আপনি
+  // ফ্রি ডেলিভারি, ৫% ছাড় পাচ্ছেন") instead of repeating "আপনি … পাচ্ছেন" once
+  // per reward.
+  const rewardDescriptions = [
+    ...metRewardTiers.map((t) => t.description),
+    ...(itemSavings > 0 ? [itemSavingsLabel ? `${itemSavingsLabel} ছাড়` : "ছাড়"] : []),
+  ];
+  const hasReward = rewardDescriptions.length > 0;
+  const celebrationMessage = `আপনি ${rewardDescriptions.join(", ")} পাচ্ছেন`;
+  useEffect(() => {
+    if (!hasReward || celebratedRef.current) return;
+    celebratedRef.current = true;
+    setShowCelebration(true);
+    const t = setTimeout(() => setShowCelebration(false), 5000);
+    return () => clearTimeout(t);
+  }, [hasReward]);
+
   // The applied coupon doesn't stack with the spend-more reward above —
   // same "best wins, not summed" rule StorefrontService.createOrder applies
   // server-side, so this never shows a bigger discount than what's charged.
@@ -61,15 +98,6 @@ export function CheckoutClient({
   const savingsLabel = couponWins
     ? `কুপন ${appliedCoupon!.code}`
     : metRewardTiers.map((t) => t.description).join(" + ");
-
-  const itemDiscountPercents = Array.from(
-    new Set(
-      items
-        .filter((i) => i.basePrice !== undefined && i.basePrice > i.price)
-        .map((i) => Math.round(((i.basePrice! - i.price) / i.basePrice!) * 100)),
-    ),
-  );
-  const itemSavingsLabel = itemDiscountPercents.length === 1 ? `${bn(itemDiscountPercents[0])}%` : "";
 
   // "নিজের কম্বো" — grouped into its own card exactly like CartDrawer (same
   // reference design), instead of flat rows mixed in with regular items.
@@ -153,9 +181,13 @@ export function CheckoutClient({
   const metFreeDelivery = metRewardTiers.some((t) => t.freeDelivery) || comboFreeDelivery;
   const deliveryCharge = channel?.deliveryCharge && !metFreeDelivery ? channel.deliveryCharge : 0;
   const showDeliveryLine = Boolean(channel?.deliveryCharge);
+  // The real delivery charge even when waived — shown as "৳100 (ফ্রি)"
+  // instead of a bare "ফ্রি" so the actual taka amount being saved is never
+  // hidden, and folded into totalSavings below for the same reason.
+  const deliverySavings = metFreeDelivery ? (channel?.deliveryCharge ?? 0) : 0;
 
   const finalTotal = subtotal - discountAmount - comboDiscountTotal + deliveryCharge;
-  const totalSavings = itemSavings + discountAmount + comboDiscountTotal;
+  const totalSavings = itemSavings + discountAmount + comboDiscountTotal + deliverySavings;
 
   // "কম্বো এডিট করুন" — sends this group's lines back into the combo builder
   // (same shape ComboBuilder.readCombo expects) and off the main cart, so
@@ -192,7 +224,8 @@ export function CheckoutClient({
     window.dispatchEvent(new Event("relief-care:combo-updated"));
   }
   function removeCombo(groupItems: CartItem[]) {
-    groupItems.forEach((i) => remove(i.productId, i.variantId));
+    groupItems.forEach((i) => remove(i.productId, i.variantId, { silent: true }));
+    toast("কার্ট থেকে ডিলিট হয়েছে");
   }
 
   // One real, in-stock suggestion not already in the cart — the same
@@ -274,6 +307,7 @@ export function CheckoutClient({
 
   return (
     <div className="flex flex-col gap-3">
+      {showCelebration && <RewardCelebration message={celebrationMessage} />}
       <Link href="/products" className="inline-flex w-fit items-center gap-1 text-sm font-semibold text-leaf">
         ← কেনাকাটা চালিয়ে যান
       </Link>
@@ -417,6 +451,14 @@ export function CheckoutClient({
                       <p className="num font-sans text-xs text-muted">
                         {bnTaka(i.basePrice ?? i.price)} × {bn(i.quantity)}
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => remove(i.productId, i.variantId)}
+                        aria-label={`${i.name} সরান`}
+                        className="mt-1 block text-base font-bold leading-none text-danger"
+                      >
+                        ×
+                      </button>
                       <div className="mt-1 flex items-center gap-2">
                         <div className="flex items-center overflow-hidden rounded-lg border border-line-hard">
                           <button
@@ -439,9 +481,6 @@ export function CheckoutClient({
                             +
                           </button>
                         </div>
-                        <button type="button" onClick={() => remove(i.productId, i.variantId)} className="font-sans text-xs text-muted underline">
-                          সরান
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -553,7 +592,9 @@ export function CheckoutClient({
             {showDeliveryLine && (
               <div className="num mb-1 flex items-center justify-between text-sm">
                 <span className="font-semibold text-leaf">ডেলিভারি চার্জ</span>
-                <span className="font-sans font-semibold text-ink">{deliveryCharge > 0 ? bnTaka(deliveryCharge) : "ফ্রি"}</span>
+                <span className="font-sans font-semibold text-ink">
+                  {deliveryCharge > 0 ? bnTaka(deliveryCharge) : `${bnTaka(channel?.deliveryCharge ?? 0)} (ফ্রি)`}
+                </span>
               </div>
             )}
             <div className="num mb-3 flex items-center justify-between border-t border-line pt-2 text-base font-semibold">
