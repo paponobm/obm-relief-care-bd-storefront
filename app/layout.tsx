@@ -5,6 +5,7 @@ import { ThemeProvider, THEME_INIT_SCRIPT } from "@/lib/theme";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { WhatsappWidget } from "@/components/whatsapp-widget";
+import { QuickViewModal } from "@/components/quick-view-modal";
 import { getCategories, getChannelConfig, STORE_NAME } from "@/lib/store";
 
 export const metadata: Metadata = {
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main className="mx-auto max-w-7xl px-4 py-6 xl:px-8">{children}</main>
             <Footer />
             <WhatsappWidget />
+            <QuickViewModal />
           </CartProvider>
         </ThemeProvider>
       </body>

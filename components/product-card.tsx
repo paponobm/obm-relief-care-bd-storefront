@@ -4,6 +4,7 @@ import type { PublicProduct } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 import { bnTaka, COUNTRY_FLAGS, importCountry } from "./product-deal-card";
 import { MiniAddToCart } from "./mini-add-to-cart";
+import { QuickViewTrigger } from "./quick-view-trigger";
 
 export function ProductCard({ product }: { product: PublicProduct }) {
   const discount =
@@ -40,7 +41,7 @@ const country = importCountry(product);
     // </Link>
     
     <div className="flex h-full w-full flex-col overflow-hidden rounded-card border border-line bg-surface">
-      <Link href={`/product/${product.slug}`} className="relative block aspect-square w-full bg-leaf-soft">
+      <QuickViewTrigger product={product} className="relative block aspect-square w-full bg-leaf-soft">
         {discount !== 0 && (
           <span className="num absolute left-2 top-2 z-10 rounded-md bg-danger px-1.5 py-0.5 text-xs font-bold text-white">
             -{bn(Math.abs(discount))}%
@@ -53,11 +54,11 @@ const country = importCountry(product);
           </span>
         )}
         <ProductArt name={product.name} categoryName={product.category?.name ?? null} thumbnailUrl={product.thumbnailUrl} />
-      </Link>
+      </QuickViewTrigger>
       <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <Link href={`/product/${product.slug}`} className="line-clamp-2 text-sm font-semibold leading-snug text-ink">
+        <QuickViewTrigger product={product} className="line-clamp-2 text-left text-sm font-semibold leading-snug text-ink">
           {product.name}
-        </Link>
+        </QuickViewTrigger>
         {product.slogan && <p className="line-clamp-1 text-xs text-muted mb-3">{product.slogan}</p>}
 
         {product.hasVariants ? (
