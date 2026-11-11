@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
 import type { ChannelConfig, PublicCategory } from "@/lib/store";
 import { ThemeToggle } from "./theme-toggle";
@@ -15,6 +15,18 @@ export function Header({ channel, categories }: { channel: ChannelConfig; catego
   const [q, setQ] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+
+  // ComboBuilder.confirmCombo fires this instead of navigating straight to
+  // checkout — Header stays mounted across route changes (it's in the root
+  // layout), so a plain window event is enough to pop the cart open on
+  // whatever page the customer lands back on.
+  useEffect(() => {
+    function openCart() {
+      setCartOpen(true);
+    }
+    window.addEventListener("relief-care:open-cart", openCart);
+    return () => window.removeEventListener("relief-care:open-cart", openCart);
+  }, []);
 
   function onSearch(e: React.FormEvent) {
     e.preventDefault();

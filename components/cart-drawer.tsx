@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useCart } from "@/lib/cart";
+import { type CartItem, useCart } from "@/lib/cart";
 import {
   getFlashSale,
   type ChannelConfig,
   type PublicProduct,
 } from "@/lib/store";
-import { bn } from "@/lib/bn-digits";
+import { bn, bnToNumber } from "@/lib/bn-digits";
 import { bnTaka, ProductDealCard } from "./product-deal-card";
 import { ProductArt } from "./product-art";
 
@@ -27,6 +28,7 @@ export function CartDrawer({
   channel: ChannelConfig;
 }) {
   const { items, subtotal, setQuantity, remove, quantityDiscounts } = useCart();
+  const router = useRouter();
   const combo = channel.comboBanners[0];
   const [crossSell, setCrossSell] = useState<PublicProduct[]>([]);
 
@@ -46,14 +48,25 @@ export function CartDrawer({
   // basePrice vs its current, re-tiered price). Labeled with the percent
   // only when every discounted line shares the same one — a mixed cart
   // doesn't get a single, potentially-misleading percent slapped on it.
-  // grossTotal (list prices, before any discount) is also the basis for
-  // every eligibility check below (minimum order, reward tiers, free
-  // delivery) and for the reward discount's own amount — matching exactly
-  // what StorefrontService.createOrder computes server-side off its own
-  // gross `subtotal`, so what's shown here is never more generous than
-  // what the order actually gets charged.
+  // grossTotal (list prices, before any discount) is also the minimum-order
+  // gate's basis — matching exactly what StorefrontService.createOrder
+  // computes server-side off its own gross `subtotal`, so what's shown here
+  // is never more generous than what the order actually gets charged. The
+  // reward-tier/coupon/free-delivery checks below use standaloneGrossTotal
+  // instead (see its own comment).
   const grossTotal = items.reduce((sum, i) => sum + (i.basePrice ?? i.price) * i.quantity, 0);
   const itemSavings = grossTotal - subtotal;
+
+  // Everything EXCEPT combo-builder items — spend-more rewards, the coupon
+  // and the delivery-charge waiver are all based on this, never grossTotal.
+  // A combo already has its own bundle pricing (Settings → Home Page Combo
+  // → Pricing tier cards); letting its value also count toward "spend ৳1,300
+  // get free delivery" would double-discount the same taka, so it only ever
+  // gets its own combo-tier cut — same rule StorefrontService.createOrder
+  // applies server-side.
+  const standaloneGrossTotal = items
+    .filter((i) => !i.comboGroupId)
+    .reduce((sum, i) => sum + (i.basePrice ?? i.price) * i.quantity, 0);
 
   // Settings → Other Settings → Minimum order amount. null/0 means no
   // minimum, same "omitted = off" convention as every other channel config
@@ -68,18 +81,18 @@ export function CartDrawer({
   // out of reach) the next one's "আর ৳X নিলে …" prompt, all in one line; the
   // bar fills toward the next tier, or sits full once every tier is met.
   const rewardTiers = channel.spendingRewards;
-  const metRewardTiers = rewardTiers.filter((t) => grossTotal >= t.amount);
-  const nextRewardTier = rewardTiers.find((t) => grossTotal < t.amount);
+  const metRewardTiers = rewardTiers.filter((t) => standaloneGrossTotal >= t.amount);
+  const nextRewardTier = rewardTiers.find((t) => standaloneGrossTotal < t.amount);
   const rewardMessage = [
     ...metRewardTiers.map((t) => `অভিনন্দন! আপনি ${t.description} পাচ্ছেন`),
     ...(nextRewardTier
       ? [
-          `আর ${bnTaka(nextRewardTier.amount - grossTotal)} এর পণ্য নিলে ${nextRewardTier.description}!`,
+          `আর ${bnTaka(nextRewardTier.amount - standaloneGrossTotal)} এর পণ্য নিলে ${nextRewardTier.description}!`,
         ]
       : []),
   ].join(", ");
   const rewardBarPercent = nextRewardTier
-    ? Math.min(100, (grossTotal / nextRewardTier.amount) * 100)
+    ? Math.min(100, (standaloneGrossTotal / nextRewardTier.amount) * 100)
     : 100;
 
   // The one real part of spendingRewards: the highest-amount tier the
@@ -89,7 +102,7 @@ export function CartDrawer({
     .reverse()
     .find((t) => (t.discountPercent ?? 0) > 0);
   const discountAmount = discountTier
-    ? Math.round((grossTotal * discountTier.discountPercent!) / 100)
+    ? Math.round((standaloneGrossTotal * discountTier.discountPercent!) / 100)
     : 0;
 
   const itemDiscountPercents = Array.from(
@@ -106,14 +119,132 @@ export function CartDrawer({
   // the same real admin-written descriptions shown in the reward box.
   const savingsLabel = metRewardTiers.map((t) => t.description).join(" + ");
 
+  // "নিজের কম্বো" — every line ComboBuilder.confirmCombo added together
+  // shares one comboGroupId; grouped here into its own card instead of flat
+  // rows (see the reference design). Settings → Home Page Combo → Pricing
+  // tier cards' Rate % is the real part: the highest-amount tier this
+  // group's own (gross) subtotal reaches sets its discount, and a tier with
+  // Free delivery ticked waives the order's delivery charge just like a
+  // spend-more reward's own freeDelivery — exactly the rule
+  // StorefrontService.createOrder applies when the order is actually
+  // created from the same comboGroupId.
+  const comboTiers = (combo?.tiers ?? [])
+    .filter((t) => (t.discountPercent ?? 0) > 0)
+    .map((t) => ({ amount: bnToNumber(t.title), discountPercent: t.discountPercent!, description: t.description }));
+  // Every pricing-tier card, discount or not (e.g. a free-delivery-only
+  // first step) — sorted lowest-amount first, same convention as the
+  // spend-more rewards box, so the combo card's own "আর ৳X যোগ করলে …" hint
+  // below can find the very next one regardless of admin row order.
+  const allComboTiers = (combo?.tiers ?? [])
+    .map((t) => ({ amount: bnToNumber(t.title), description: t.description, freeDelivery: t.freeDelivery }))
+    .sort((a, b) => a.amount - b.amount);
+  const comboGroupIds = Array.from(new Set(items.filter((i) => i.comboGroupId).map((i) => i.comboGroupId!)));
+  const comboGroups = comboGroupIds.map((groupId) => {
+    const groupItems = items.filter((i) => i.comboGroupId === groupId);
+    const groupGross = groupItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    // Each line's own regular/MSRP price (compareAtPrice), when it has one —
+    // the crossed-out total below reflects this even when no combo tier has
+    // discounted the group yet, same as a single product's own sale price.
+    const groupRegularTotal = groupItems.reduce((sum, i) => sum + (i.compareAtPrice ?? i.price) * i.quantity, 0);
+    const metComboTiers = comboTiers.filter((t) => groupGross >= t.amount);
+    // Once an item joins a combo, the combo's own tiers are the only thing
+    // that discounts it — never also the generic per-product quantity-tier
+    // discount (Settings → Other Settings → Quantity discounts). Mixing the
+    // two made "কম্বো ছাড়" show an amount that had nothing to do with any
+    // combo tier actually being reached.
+    const comboPercent = [...metComboTiers].reverse()[0]?.discountPercent ?? 0;
+    const groupDiscount = groupItems.reduce((sum, i) => sum + Math.round((i.price * i.quantity * comboPercent) / 100), 0);
+    // The green "✓" line reads off every reached tier (comboTiers only has
+    // the discount-bearing ones — a free-delivery-only first step would
+    // never show here otherwise, even once it's actually met).
+    const badgeText = allComboTiers
+      .filter((t) => groupGross >= t.amount)
+      .flatMap((t) => t.description.split("\n"))
+      .map((line) => line.replace(/^\+\s*/, "").trim())
+      .filter(Boolean)
+      .join(" + ");
+    // "আর ৳X যোগ করলে …" — the next pricing-tier card this group hasn't
+    // reached yet, same "add more, get more" hint the combo builder page's
+    // own progress bar already gives.
+    const nextTier = allComboTiers.find((t) => groupGross < t.amount);
+    const nextTierText = nextTier
+      ? nextTier.description
+          .split("\n")
+          .map((line) => line.replace(/^\+\s*/, "").trim())
+          .filter(Boolean)
+          .join(" + ")
+      : null;
+    // This group's own "ফ্রি ডেলিভারি" achievement — waives the order's
+    // delivery charge below, independent of the spend-more reward's own
+    // freeDelivery (standalone items only).
+    const groupFreeDelivery = allComboTiers.some((t) => groupGross >= t.amount && t.freeDelivery);
+    return {
+      groupId,
+      groupItems,
+      groupGross,
+      groupRegularTotal,
+      groupNet: groupGross - groupDiscount,
+      groupDiscount,
+      badgeText,
+      nextTier,
+      nextTierText,
+      groupFreeDelivery,
+    };
+  });
+  const comboDiscountTotal = comboGroups.reduce((sum, g) => sum + g.groupDiscount, 0);
+  const comboFreeDelivery = comboGroups.some((g) => g.groupFreeDelivery);
+  const standaloneItems = items.filter((i) => !i.comboGroupId);
+
   // "ডেলিভারি চার্জ" — Settings → Other Settings → Delivery charge, waived
-  // (shown as ফ্রি) whenever a met reward tier has Free delivery ticked —
-  // the exact same rule StorefrontService.createOrder applies server-side.
-  const metFreeDelivery = metRewardTiers.some((t) => t.freeDelivery);
+  // (shown as ফ্রি) whenever a met reward tier has Free delivery ticked, or
+  // any combo group's own tier does — the exact same rule
+  // StorefrontService.createOrder applies server-side.
+  const metFreeDelivery = metRewardTiers.some((t) => t.freeDelivery) || comboFreeDelivery;
   const deliveryCharge = channel.deliveryCharge && !metFreeDelivery ? channel.deliveryCharge : 0;
   const showDeliveryLine = Boolean(channel.deliveryCharge);
-  const finalTotal = grossTotal - itemSavings - discountAmount + deliveryCharge;
-  const totalSavings = itemSavings + discountAmount;
+
+  const finalTotal = grossTotal - itemSavings - discountAmount - comboDiscountTotal + deliveryCharge;
+  const totalSavings = itemSavings + discountAmount + comboDiscountTotal;
+
+  // "কম্বো এডিট করুন" — sends this group's lines back into the combo builder
+  // (same shape ComboBuilder.readCombo expects) and off the main cart, so
+  // editing it there doesn't also double-count it here.
+  function editCombo(groupId: string, groupItems: CartItem[]) {
+    try {
+      localStorage.setItem(
+        "relief-care-combo",
+        JSON.stringify(
+          groupItems.map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            variantLabel: i.variantLabel,
+            slug: i.slug,
+            name: i.name,
+            image: i.image,
+            price: i.price,
+            compareAtPrice: i.compareAtPrice,
+            quantity: i.quantity,
+          })),
+        ),
+      );
+      // The combo stays in the cart exactly as it is — ComboBuilder removes
+      // (and replaces, if anything's left) this exact group once the edit
+      // is actually confirmed or emptied out, never just for opening it.
+      localStorage.setItem("relief-care-combo-editing-group", groupId);
+    } catch {
+      // storage unavailable — fall back to editing a disconnected copy
+    }
+    onClose();
+    router.push("/combo");
+    // A same-URL push (already on /combo — e.g. right after confirming this
+    // very combo) doesn't remount the page, so ComboBuilder's own mount
+    // effect never re-runs on its own; this nudges it to re-read what was
+    // just written above instead of showing an empty builder.
+    window.dispatchEvent(new Event("relief-care:combo-updated"));
+  }
+  function removeCombo(groupItems: CartItem[]) {
+    groupItems.forEach((i) => remove(i.productId, i.variantId));
+  }
 
   // "৫% ছাড় পাচ্ছেন · আর ১টা নিলে ১০%" — only for lines whose price actually
   // re-tiers on quantity change (basePrice set, see lib/cart.tsx). Combines
@@ -215,7 +346,7 @@ export function CartDrawer({
             </div>
           )}
 
-          {combo && (
+          {combo && comboGroups.length === 0 && (
             <Link
               href="/combo"
               onClick={onClose}
@@ -253,7 +384,56 @@ export function CartDrawer({
           ) : (
             <>
               <div className="flex flex-col gap-3">
-                {items.map((i) => {
+                {comboGroups.map((g) => (
+                  <div key={g.groupId} className="rounded-xl border border-amber bg-amber-soft p-3.5">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="rounded-full bg-amber px-2.5 py-1 text-xs font-bold text-white">নিজের কম্বো</span>
+                      <span className="num text-xs text-muted font-sans">{bn(g.groupItems.length)}টি পণ্য</span>
+                    </div>
+                    <div className="mb-2 flex -space-x-2">
+                      {g.groupItems.slice(0, 5).map((i) => (
+                        <div
+                          key={`${i.productId}:${i.variantId ?? ""}`}
+                          className="h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 border-amber-soft bg-leaf-soft"
+                        >
+                          <ProductArt name={i.name} categoryName={null} thumbnailUrl={i.image} className="h-full w-full object-cover" />
+                        </div>
+                      ))}
+                      {g.groupItems.length > 5 && (
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-amber-soft bg-line text-xs font-bold text-ink font-sans">
+                          +{bn(g.groupItems.length - 5)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="num mb-1 flex items-baseline gap-2">
+                      {g.groupRegularTotal > g.groupNet && <s className="font-sans text-sm text-muted">{bnTaka(g.groupRegularTotal)}</s>}
+                      <b className="font-display text-xl text-amber-deep font-sans">{bnTaka(g.groupNet)}</b>
+                    </div>
+                    {g.badgeText && <p className="mb-1 font-sans text-xs font-semibold text-leaf-deep">✓ {g.badgeText}</p>}
+                    {g.nextTier && (
+                      <p className="mb-2 font-sans text-xs font-semibold text-amber-deep">
+                        <span className="num">আর {bnTaka(g.nextTier.amount - g.groupGross)}</span> যোগ করলে {g.nextTierText}!
+                      </p>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => editCombo(g.groupId, g.groupItems)}
+                        className="flex-1 rounded-lg border border-amber bg-surface py-1.5 text-xs font-semibold text-amber-deep font-sans"
+                      >
+                        কম্বো এডিট করুন
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeCombo(g.groupItems)}
+                        className="shrink-0 text-xs font-semibold text-muted underline font-sans"
+                      >
+                        কম্বো সরান
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {standaloneItems.map((i) => {
                   const tier = tierMessage(i.quantity, i.basePrice);
                   return (
                     <div
@@ -384,7 +564,7 @@ export function CartDrawer({
           </div>
         ) : (
           <div className="border-t border-line px-4 py-3.5">
-            {itemSavings > 0 || discountAmount > 0 || showDeliveryLine ? (
+            {itemSavings > 0 || discountAmount > 0 || comboDiscountTotal > 0 || showDeliveryLine ? (
               <>
                 <div className="num mb-1 flex items-center justify-between text-sm text-muted">
                   <span className="font-semibold text-leaf">পণ্যের মূল দাম</span>
@@ -400,6 +580,12 @@ export function CartDrawer({
                   <div className="num mb-1 flex items-center justify-between text-sm text-danger">
                     <span className="font-semibold font-sans">পরিমাণে ছাড়{savingsLabel ? ` (${savingsLabel})` : ""}</span>
                     <span className="font-sans font-semibold">-{bnTaka(discountAmount)}</span>
+                  </div>
+                )}
+                {comboDiscountTotal > 0 && (
+                  <div className="num mb-1 flex items-center justify-between text-sm text-danger">
+                    <span className="font-semibold font-sans">কম্বো ছাড়</span>
+                    <span className="font-sans font-semibold">-{bnTaka(comboDiscountTotal)}</span>
                   </div>
                 )}
                 {showDeliveryLine && (

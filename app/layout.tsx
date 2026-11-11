@@ -29,6 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     spendingRewards: [],
     quantityDiscounts: [],
     deliveryCharge: null,
+    coupons: [],
   }));
   const categories = await getCategories().catch(() => []);
 

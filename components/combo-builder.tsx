@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ProductArt } from "./product-art";
 import { bnTaka, COUNTRY_FLAGS, importCountry } from "./product-deal-card";
@@ -17,6 +16,10 @@ const EXCLUDED_CATEGORY_SLUGS = ["combo-offers", "solution-kits"];
 
 const STORAGE_KEY = "relief-care-combo";
 const FOR_KEY = "relief-care-combo-for";
+// Set by CartDrawer/CheckoutClient's "কম্বো এডিট করুন" alongside STORAGE_KEY
+// — the cart keeps that combo exactly as it was (not touched yet) until this
+// page actually confirms or empties it; see the editingGroupId effects below.
+const EDITING_GROUP_KEY = "relief-care-combo-editing-group";
 
 interface ComboLine {
   productId: string;
@@ -26,6 +29,11 @@ interface ComboLine {
   name: string;
   image: string | null;
   price: number;
+  // This line's own regular/MSRP price, when the product has one — carried
+  // through to the cart (see CartItem.compareAtPrice) so the combo card can
+  // show a real "total regular price" even for lines no combo tier has
+  // discounted yet.
+  compareAtPrice?: number | null;
   quantity: number;
 }
 
@@ -72,18 +80,39 @@ export function ComboBuilder({
   products: PublicProduct[];
 }) {
   const cart = useCart();
-  const router = useRouter();
   const [combo, setCombo] = useState<ComboLine[]>([]);
   const [comboFor, setComboFor] = useState(PERSONAS[1]);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  // Snapshot of whatever was loaded (empty for a fresh build, or an existing
+  // combo's own lines when CartDrawer/CheckoutClient's "কম্বো এডিট করুন" sent
+  // the customer here) — compared against the live `combo` below to decide
+  // whether anything's actually changed yet (see isUnchanged/bottomLabel).
+  const [loadedSnapshot, setLoadedSnapshot] = useState<string>("[]");
+  // The cart's comboGroupId this session is editing, if any — null for a
+  // fresh build. That cart group is left completely untouched until this
+  // page confirms (replacing it) or is emptied out (removing it); merely
+  // opening the editor, or navigating away without doing either, leaves the
+  // original combo exactly as it was.
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+
+  function loadCombo() {
+    const loaded = readCombo();
+    setCombo(loaded);
+    setLoadedSnapshot(JSON.stringify(loaded));
+    try {
+      setEditingGroupId(localStorage.getItem(EDITING_GROUP_KEY));
+    } catch {
+      setEditingGroupId(null);
+    }
+  }
 
   // Own, separate selection (not the live cart) — this is how the reference
   // keeps "what's in the combo so far" distinct from whatever else is
   // already sitting in the cart, so the progress bar below only counts
   // what's actually meant for this combo.
   useEffect(() => {
-    setCombo(readCombo());
+    loadCombo();
     try {
       const savedFor = localStorage.getItem(FOR_KEY);
       if (savedFor && PERSONAS.includes(savedFor)) setComboFor(savedFor);
@@ -91,6 +120,39 @@ export function ComboBuilder({
       // ignore
     }
   }, []);
+
+  // "কম্বো এডিট করুন" (CartDrawer/CheckoutClient) writes the combo's lines
+  // into the same storage key and fires this instead of relying on a route
+  // change — clicking it while already sitting on this page (e.g. right
+  // after confirming a combo, which no longer navigates away) is a same-URL
+  // `router.push` that Next.js doesn't remount for, so the mount effect
+  // above would never re-run and the edited combo would never actually load
+  // here, just vanish from the cart with nothing to show for it.
+  useEffect(() => {
+    window.addEventListener("relief-care:combo-updated", loadCombo);
+    return () => window.removeEventListener("relief-care:combo-updated", loadCombo);
+  }, []);
+
+  function clearEditingGroup() {
+    setEditingGroupId(null);
+    try {
+      localStorage.removeItem(EDITING_GROUP_KEY);
+    } catch {
+      // ignore
+    }
+  }
+
+  // "when there's no product in the combo, it's not in the cart" — editing
+  // an existing combo down to zero items removes it right away, same as
+  // clicking "কম্বো সরান" would; editingGroupId is only ever set while
+  // actually editing an existing combo (never for a fresh build), so this
+  // can't fire from just emptying a combo you're building from scratch.
+  useEffect(() => {
+    if (!editingGroupId || combo.length > 0) return;
+    cart.items.filter((i) => i.comboGroupId === editingGroupId).forEach((i) => cart.remove(i.productId, i.variantId));
+    clearEditingGroup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingGroupId, combo.length]);
 
   // Persisted directly inside each mutator (same reasoning as lib/cart.tsx)
   // rather than via a `useEffect([combo])` watcher — that pattern races the
@@ -178,6 +240,7 @@ export function ComboBuilder({
               name: e.name,
               image: e.imageUrl,
               price: e.price,
+              compareAtPrice: e.compareAtPrice,
               quantity: 1,
             },
           ];
@@ -197,6 +260,13 @@ export function ComboBuilder({
 
   const subtotal = combo.reduce((a, x) => a + x.price * x.quantity, 0);
   const count = combo.reduce((a, x) => a + x.quantity, 0);
+  // Editing an existing combo starts from a non-empty snapshot — if nothing's
+  // been added/removed/re-quantified since, there's nothing new to confirm,
+  // so the bottom bar reads "কার্ট দেখুন" (go back and look) instead of
+  // "কার্টে নিন" (add this to the cart). A fresh build never has a non-empty
+  // snapshot to match, so it always shows "কার্টে নিন" once anything's added
+  // — unchanged from before this distinction existed.
+  const isUnchanged = count > 0 && JSON.stringify(combo) === loadedSnapshot;
 
   const parsedTiers = useMemo(() => tiers.map((t) => ({ ...t, amount: bnToNumber(t.title) })), [tiers]);
   const maxAmount = parsedTiers.length ? parsedTiers[parsedTiers.length - 1].amount : 0;
@@ -217,7 +287,11 @@ export function ComboBuilder({
       for (const item of movable) {
         const idx = next.findIndex((x) => sameLine(x, item));
         if (idx >= 0) next[idx] = { ...next[idx], quantity: next[idx].quantity + item.quantity };
-        else
+        else {
+          const p = productById.get(item.productId);
+          const compareAtPrice = item.variantId
+            ? (p?.variants?.find((v) => v.id === item.variantId)?.compareAtPrice ?? null)
+            : (p?.compareAtPrice ?? null);
           next.push({
             productId: item.productId,
             variantId: item.variantId,
@@ -226,8 +300,10 @@ export function ComboBuilder({
             name: item.name,
             image: item.image,
             price: item.price,
+            compareAtPrice,
             quantity: item.quantity,
           });
+        }
       }
       persistCombo(next);
       return next;
@@ -236,6 +312,18 @@ export function ComboBuilder({
   }
 
   function confirmCombo() {
+    // Editing an existing combo: it was never removed when the editor
+    // opened (see editingGroupId's own comment), so the old version is
+    // replaced here, in one step, instead of briefly having neither or both
+    // in the cart.
+    if (editingGroupId) {
+      cart.items.filter((i) => i.comboGroupId === editingGroupId).forEach((i) => cart.remove(i.productId, i.variantId));
+    }
+    // One id shared by every line in this combo — CartDrawer groups by it to
+    // render a single "নিজের কম্বো" card, and the real discount tier (if the
+    // group's subtotal reaches one) is recomputed server-side from it at
+    // checkout, never trusted from here.
+    const comboGroupId = `combo-${Date.now()}`;
     combo.forEach((item) =>
       cart.add(
         {
@@ -246,13 +334,19 @@ export function ComboBuilder({
           name: item.name,
           image: item.image,
           price: item.price,
+          compareAtPrice: item.compareAtPrice,
+          comboGroupId,
         },
         item.quantity,
       ),
     );
     setCombo([]);
     persistCombo([]);
-    router.push("/checkout");
+    clearEditingGroup();
+    // Opens the cart drawer right here instead of jumping straight to
+    // checkout — the customer should see the combo (and whatever else is
+    // already in their cart) before committing to order it.
+    window.dispatchEvent(new Event("relief-care:open-cart"));
   }
 
   const progressMsg = !count
@@ -483,7 +577,7 @@ export function ComboBuilder({
                 {progressMsg && <small className="block truncate text-sm text-muted font-sans">{progressMsg}</small>}
               </div>
               <button type="button" onClick={confirmCombo} className="shrink-0 rounded-xl bg-amber px-5 py-2.5 text-base font-bold text-white">
-                কার্টে নিন
+                {isUnchanged ? "কার্ট দেখুন" : "কার্টে নিন"}
               </button>
             </div>
           </div>

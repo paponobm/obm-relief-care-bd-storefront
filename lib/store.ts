@@ -32,6 +32,14 @@ export interface TrustBadge {
 export interface ComboTier {
   title: string;
   description: string;
+  // The real discount this tier applies to the combo's own group subtotal —
+  // see StorefrontService.createOrder. Omitted/0 keeps the card purely
+  // informational, same as before this field existed.
+  discountPercent?: number;
+  // Waives the Settings → Other Settings → Delivery charge for the whole
+  // order once this combo group's own subtotal reaches this tier — same
+  // real server-enforced waiver as a spend-more reward's own freeDelivery.
+  freeDelivery?: boolean;
 }
 
 export interface ComboBannerConfig {
@@ -80,6 +88,17 @@ export interface ChannelConfig {
   // checkout unless a met spendingRewards tier has freeDelivery on, same
   // real server-enforced waiver. null means no delivery charge at all.
   deliveryCharge: number | null;
+  // Every coupon code checkout's coupon field actually matches (hero banner
+  // + Other Settings, merged) — real: the backend applies the best of this
+  // and the spendingRewards discount, not both. Empty means no code ever
+  // matches anything.
+  coupons: Coupon[];
+}
+
+export interface Coupon {
+  code: string;
+  discountPercent: number;
+  description?: string;
 }
 
 export interface SpendingReward {
@@ -262,7 +281,8 @@ export async function placeOrder(payload: {
   customerPhone: string;
   shippingAddress: string;
   notes?: string;
-  items: { productId: string; variantId?: string; quantity: number }[];
+  items: { productId: string; variantId?: string; quantity: number; comboGroupId?: string }[];
+  couponCode?: string;
 }): Promise<CreatedOrder> {
   const res = await fetch(`${API_URL}/store/${CHANNEL_SLUG}/orders`, {
     method: "POST",

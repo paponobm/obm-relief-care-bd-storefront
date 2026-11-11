@@ -23,6 +23,18 @@ export interface CartItem {
   // combo-tier discount), which leaves `price` untouched, same as before
   // this field existed.
   basePrice?: number;
+  // Shared by every line added together as one "Build your own combo"
+  // bundle (see ComboBuilder.confirmCombo) — CartDrawer uses it to render
+  // those lines as a single grouped card instead of flat individual rows,
+  // and placeOrder forwards it so StorefrontService.createOrder can
+  // recompute that group's own real discount tier server-side.
+  comboGroupId?: string;
+  // The product's own regular/MSRP price (its listing's compareAtPrice),
+  // when it's higher than `price` — display-only, unlike basePrice: never
+  // read by add()/setQuantity() below, so setting it can't trigger
+  // re-tiering. Only combo-builder lines set this today, for the combo
+  // card's crossed-out "total regular price" (CartDrawer/CheckoutClient).
+  compareAtPrice?: number | null;
   quantity: number;
 }
 
