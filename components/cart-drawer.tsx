@@ -298,7 +298,7 @@ export function CartDrawer({
   // delivery — the সর্বমোট row's struck-through figure. Always equals
   // finalTotal + totalSavings, so it can never show a bigger "you'd have
   // paid this" number than what the savings line below already claims.
-  const originalTotal = finalTotal + totalSavings;
+  // const originalTotal = finalTotal + totalSavings;
 
   // "কম্বো এডিট করুন" — sends this group's lines back into the combo builder
   // (same shape ComboBuilder.readCombo expects) and off the main cart, so
