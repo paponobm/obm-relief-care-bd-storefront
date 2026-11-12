@@ -79,7 +79,7 @@ export function CheckoutClient({
     ...(itemSavings > 0 ? [itemSavingsLabel ? `${itemSavingsLabel} ছাড়` : "ছাড়"] : []),
   ];
   const hasReward = rewardDescriptions.length > 0;
-  const celebrationMessage = `আপনি ${rewardDescriptions.join(", ")} পাচ্ছেন`;
+  const celebrationMessage = `আপনি ${rewardDescriptions.join(" + ")} পাচ্ছেন`;
   useEffect(() => {
     if (!hasReward || celebratedRef.current) return;
     celebratedRef.current = true;
@@ -451,14 +451,14 @@ export function CheckoutClient({
                       <p className="num font-sans text-xs text-muted">
                         {bnTaka(i.basePrice ?? i.price)} × {bn(i.quantity)}
                       </p>
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => remove(i.productId, i.variantId)}
                         aria-label={`${i.name} সরান`}
                         className="mt-1 block text-base font-bold leading-none text-danger"
                       >
                         ×
-                      </button>
+                      </button> */}
                       <div className="mt-1 flex items-center gap-2">
                         <div className="flex items-center overflow-hidden rounded-lg border border-line-hard">
                           <button

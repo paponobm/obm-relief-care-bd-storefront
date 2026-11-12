@@ -516,7 +516,7 @@ export function CartDrawer({
                           type="button"
                           onClick={() => remove(i.productId, i.variantId)}
                           aria-label={`${i.name} সরান`}
-                          className="text-base font-bold leading-none text-danger"
+                          className="text-xl font-bold leading-none text-danger"
                         >
                           ×
                         </button>
@@ -566,7 +566,7 @@ export function CartDrawer({
                   <h3 className="font-display mb-3 text-sm font-sans">
                     {!metMinimum && minimum
                       ? `যোগ করে ${bnTaka(minimum)} পূরণ করুন`
-                      : "আরও কিছু যোগ করুন"}
+                      : "Suggested Products for you"}
                   </h3>
                   <div className="flex gap-2.5 overflow-x-auto pb-1">
                     {suggestions.map((p) => (
@@ -626,7 +626,7 @@ export function CartDrawer({
                   </div>
                 )}
                 <div className="num mb-3 flex items-center justify-between text-base font-semibold">
-                  <span>সাবটোটাল</span>
+                  <span>সর্বমোট</span>
                   <span className="text-amber-deep font-sans">{bnTaka(finalTotal)}</span>
                 </div>
                 {totalSavings > 0 && (
@@ -637,7 +637,7 @@ export function CartDrawer({
               </>
             ) : (
               <div className="num mb-3 flex items-center justify-between text-base font-semibold">
-                <span>সাবটোটাল</span>
+                <span>সর্বমোট</span>
                 <span className="text-amber-deep font-sans">
                   {bnTaka(subtotal)}
                 </span>
