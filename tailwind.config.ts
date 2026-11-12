@@ -13,6 +13,7 @@ const config: Config = {
         surface: "var(--surface)",
         line: "var(--line)",
         danger: { DEFAULT: "var(--danger)", soft: "var(--danger-soft)" },
+        "custom-dark-green": "#0F2418",
       },
       fontFamily: {
         display: ["'Baloo Da 2'", "'Hind Siliguri'", "system-ui", "sans-serif"],

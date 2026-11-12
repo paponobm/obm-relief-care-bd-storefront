@@ -303,7 +303,16 @@ export interface HealthTip {
   // null when not linked, or when the linked category is no longer
   // published on this channel.
   category: string | null;
+  // Set only alongside `category` above — usable to fetch real products
+  // from this same category for the detail page's "এই সমস্যায় কাজে লাগবে" row.
+  categoryId: string | null;
   readMinutes: number | null;
+  description: string;
+  points: string[];
+  // The detail page's "এই সমস্যায় কাজে লাগবে" row — specific, admin-picked
+  // products, resolved server-side. Empty means no specific picks were
+  // made; the detail page then falls back to the tip's own category.
+  items: PublicProduct[];
 }
 
 // Admin-curated via Settings → Health Tips — empty means the section

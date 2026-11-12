@@ -62,14 +62,17 @@ export function QuizFlow({ onFinish }: { onFinish?: () => void } = {}) {
     setSubs([]);
   }
 
-  // "এখনই কিনুন" — adds every recommended product shown above (same silent
-  // bulk-add + open-cart-drawer pattern as ComboBuilder.confirmCombo) and
-  // opens the cart drawer right here instead of jumping straight to
-  // checkout, so the customer sees everything that just got added before
-  // committing to order it.
+  // "এখনই কিনুন" — adds every recommended product shown above that isn't
+  // already in the cart (same silent bulk-add + open-cart-drawer pattern as
+  // ComboBuilder.confirmCombo), then opens the cart drawer right here
+  // instead of jumping straight to checkout. Skipping items already added
+  // (e.g. via that item's own "কার্টে নিন" button) matters — without this,
+  // this button would silently double the quantity of anything the
+  // customer already picked, on top of what they meant to add.
   function addAllToCart() {
     groups.forEach((g) => {
       g.items.slice(0, 2).forEach((p) => {
+        if (isInCart(p.productId)) return;
         add({ productId: p.productId, slug: p.slug, name: p.name, image: p.thumbnailUrl, price: p.price }, 1, {
           silent: true,
         });

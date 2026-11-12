@@ -71,6 +71,8 @@ export function CheckoutClient({
   // on an unrelated re-render — once per page visit is enough.
   const [showCelebration, setShowCelebration] = useState(false);
   const celebratedRef = useRef(false);
+  // "হিসাব দেখুন" — same collapsed-by-default breakdown as CartDrawer.
+  const [showBreakdown, setShowBreakdown] = useState(false);
   // One combined sentence even when 2+ things are true at once (e.g. "আপনি
   // ফ্রি ডেলিভারি, ৫% ছাড় পাচ্ছেন") instead of repeating "আপনি … পাচ্ছেন" once
   // per reward.
@@ -188,6 +190,9 @@ export function CheckoutClient({
 
   const finalTotal = subtotal - discountAmount - comboDiscountTotal + deliveryCharge;
   const totalSavings = itemSavings + discountAmount + comboDiscountTotal + deliverySavings;
+  // What this order would have cost with no discounts and no waived
+  // delivery — the সর্বমোট row's struck-through figure.
+  const originalTotal = finalTotal + totalSavings;
 
   // "কম্বো এডিট করুন" — sends this group's lines back into the combo builder
   // (same shape ComboBuilder.readCombo expects) and off the main cart, so
@@ -567,40 +572,58 @@ export function CheckoutClient({
           )}
 
           <div className="border-t border-line pt-3">
-            <div className="num mb-1 flex items-center justify-between text-sm">
-              <span className="font-semibold text-leaf">পণ্যের মূল দাম</span>
-              <span className="font-sans font-semibold text-leaf">{bnTaka(grossTotal)}</span>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-sm font-semibold text-muted">সর্বমোট</span>
+              {(itemSavings > 0 || discountAmount > 0 || comboDiscountTotal > 0 || showDeliveryLine) && (
+                <button
+                  type="button"
+                  onClick={() => setShowBreakdown((v) => !v)}
+                  className="flex items-center gap-1 font-sans text-sm font-semibold text-leaf"
+                >
+                  হিসাব দেখুন
+                  <span className={`transition-transform ${showBreakdown ? "rotate-180" : ""}`}>⌄</span>
+                </button>
+              )}
             </div>
-            {itemSavings > 0 && (
-              <div className="num mb-1 flex items-center justify-between text-sm text-danger">
-                <span className="font-semibold">পণ্যে ছাড়{itemSavingsLabel ? `(${itemSavingsLabel})` : ""}</span>
-                <span className="font-sans font-semibold">-{bnTaka(itemSavings)}</span>
-              </div>
-            )}
-            {discountAmount > 0 && (
-              <div className="num mb-1 flex items-center justify-between text-sm text-danger">
-                <span className="font-semibold">পরিমাণে ছাড়{savingsLabel ? ` (${savingsLabel})` : ""}</span>
-                <span className="font-sans font-semibold">-{bnTaka(discountAmount)}</span>
-              </div>
-            )}
-            {comboDiscountTotal > 0 && (
-              <div className="num mb-1 flex items-center justify-between text-sm text-danger">
-                <span className="font-semibold">কম্বো ছাড়</span>
-                <span className="font-sans font-semibold">-{bnTaka(comboDiscountTotal)}</span>
-              </div>
-            )}
-            {showDeliveryLine && (
-              <div className="num mb-1 flex items-center justify-between text-sm">
-                <span className="font-semibold text-leaf">ডেলিভারি চার্জ</span>
-                <span className="font-sans font-semibold text-ink">
-                  {deliveryCharge > 0 ? bnTaka(deliveryCharge) : `${bnTaka(channel?.deliveryCharge ?? 0)} (ফ্রি)`}
-                </span>
-              </div>
-            )}
-            <div className="num mb-3 flex items-center justify-between border-t border-line pt-2 text-base font-semibold">
-              <span>সর্বমোট</span>
-              <span className="text-amber-deep font-sans">{bnTaka(finalTotal)}</span>
+            <div className="num mb-3 flex items-baseline gap-2">
+              <b className="font-display text-2xl text-amber-deep font-sans">{bnTaka(finalTotal)}</b>
+              {/* {totalSavings > 0 && <s className="font-sans text-sm text-muted">{bnTaka(originalTotal)}</s>} */}
             </div>
+
+            {showBreakdown && (
+              <div className="mb-3 flex flex-col gap-1 rounded-lg bg-bg p-3">
+                <div className="num flex items-center justify-between text-sm">
+                  <span className="font-semibold text-leaf">পণ্যের মূল দাম</span>
+                  <span className="font-sans font-semibold text-leaf">{bnTaka(grossTotal)}</span>
+                </div>
+                {itemSavings > 0 && (
+                  <div className="num flex items-center justify-between text-sm text-danger">
+                    <span className="font-semibold">পণ্যে ছাড়{itemSavingsLabel ? `(${itemSavingsLabel})` : ""}</span>
+                    <span className="font-sans font-semibold">-{bnTaka(itemSavings)}</span>
+                  </div>
+                )}
+                {discountAmount > 0 && (
+                  <div className="num flex items-center justify-between text-sm text-danger">
+                    <span className="font-semibold">পরিমাণে ছাড়{savingsLabel ? ` (${savingsLabel})` : ""}</span>
+                    <span className="font-sans font-semibold">-{bnTaka(discountAmount)}</span>
+                  </div>
+                )}
+                {comboDiscountTotal > 0 && (
+                  <div className="num flex items-center justify-between text-sm text-danger">
+                    <span className="font-semibold">কম্বো ছাড়</span>
+                    <span className="font-sans font-semibold">-{bnTaka(comboDiscountTotal)}</span>
+                  </div>
+                )}
+                {showDeliveryLine && (
+                  <div className="num flex items-center justify-between text-sm">
+                    <span className="font-semibold text-leaf">ডেলিভারি চার্জ</span>
+                    <span className="font-sans font-semibold text-ink">
+                      {deliveryCharge > 0 ? bnTaka(deliveryCharge) : `${bnTaka(channel?.deliveryCharge ?? 0)} (ফ্রি)`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {totalSavings > 0 && (
