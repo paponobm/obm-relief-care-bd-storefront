@@ -1,10 +1,11 @@
 const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
 
-// Swaps 0-9 for their Bengali numeral — applied on top of an already
-// Latin-formatted string (e.g. formatTaka's "৳1,234"), so commas/currency
-// signs are left alone and only the digits themselves change.
+// Every storefront digit is shown in plain English numerals now — this used
+// to swap 0-9 for their Bengali numeral, but callers (prices, quantities,
+// counts, etc.) still run their value through here, so it stays a no-op
+// pass-through rather than ripping out every call site.
 export function bn(input: string | number): string {
-  return String(input).replace(/[0-9]/g, (d) => BN_DIGITS[Number(d)]);
+  return String(input);
 }
 
 // Reverse of bn() plus digit extraction — pulls the numeric amount out of an
