@@ -10,7 +10,7 @@ import {
   type PublicProduct,
 } from "@/lib/store";
 import { bn, bnToNumber } from "@/lib/bn-digits";
-import { bnTaka, ProductDealCard } from "./product-deal-card";
+import { bnTaka } from "./product-deal-card";
 import { ProductArt } from "./product-art";
 import { QuickViewTrigger } from "./quick-view-trigger";
 
@@ -471,11 +471,31 @@ export function CartDrawer({
               </div>
               {suggestions.length > 0 && (
                 <div>
-                  <h3 className="font-display mb-2 text-sm">জনপ্রিয় পণ্য</h3>
-                  <div className="flex gap-2.5 overflow-x-auto pb-1">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <h3 className="font-display text-sm">জনপ্রিয় পণ্য</h3>
+                    <div className="flex shrink-0 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => scrollSuggestions(-1)}
+                        aria-label="আগের পণ্য"
+                        className="grid h-7 w-7 place-items-center rounded-full bg-amber text-white text-xl"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollSuggestions(1)}
+                        aria-label="পরের পণ্য"
+                        className="grid h-7 w-7 place-items-center rounded-full bg-amber text-white text-xl"
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+                  <div ref={suggestionsScrollRef} className="scrollbar-none flex gap-2.5 overflow-x-auto pb-1">
                     {suggestions.map((p) => (
-                      <div key={p.productId} className="w-[150px] shrink-0">
-                        <ProductDealCard product={p} />
+                      <div key={p.productId} className="w-[240px] shrink-0">
+                        <SuggestionCard product={p} />
                       </div>
                     ))}
                   </div>

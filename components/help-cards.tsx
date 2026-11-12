@@ -1,11 +1,24 @@
+"use client";
+
+import { useState } from "react";
+import { QuizModal } from "./quiz-modal";
+
 // Two promo cards shown right after Flash Deal — "take the quiz" and
-// "request a call". Deliberately inert for now (no href/onClick): the user
-// asked for the section to go in first, with the actual button behavior to
-// be wired up in a later pass once they say what each should do.
+// "request a call". The quiz card opens the same 3-question symptom
+// matcher (lib/quiz-data.ts) as a popup, not a page navigation — the
+// call card is still deliberately inert — no WhatsApp number/phone is
+// configured yet (lib/store.ts), so it stays non-navigating until one is
+// added, same reasoning as AddToCart's own WhatsApp link.
 export function HelpCards() {
+  const [quizOpen, setQuizOpen] = useState(false);
   return (
     <section className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <div className="flex items-center gap-3 rounded-[20px] border-[1.5px] border-leaf bg-leaf-soft p-[18px]">
+      {quizOpen && <QuizModal onClose={() => setQuizOpen(false)} />}
+      <button
+        type="button"
+        onClick={() => setQuizOpen(true)}
+        className="flex items-center gap-3 rounded-[20px] border-[1.5px] border-leaf bg-leaf-soft p-[18px] text-left"
+      >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-leaf text-white">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" />
@@ -18,7 +31,7 @@ export function HelpCards() {
           <span className="block text-sm text-muted">৩টা প্রশ্নের উত্তর দিন, আমরা ঠিক পণ্যটা খুঁজে দেব</span>
         </span>
         <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-leaf-deep">শুরু করুন →</span>
-      </div>
+      </button>
 
       <div className="flex items-center gap-3 rounded-[20px] border-[1.5px] border-amber bg-amber-soft p-[18px]">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber text-white">
