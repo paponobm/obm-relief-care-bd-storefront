@@ -4,7 +4,7 @@ import { bn } from "@/lib/bn-digits";
 
 export function Footer() {
   return (
-    <footer className="mt-5 border-t border-line bg-leaf">
+    <footer className="mt-5 border-t border-line bg-leaf ">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-10 text-sm sm:grid-cols-3 xl:px-8">
         <div className="flex flex-col gap-2">
           <b className="font-display text-amber font-bold text-2xl ">{STORE_NAME}</b>
@@ -37,7 +37,7 @@ export function Footer() {
           </Link>
         </div>
       </div>
-      <div className="border-t border-line px-4 py-4 text-center text-xs text-muted xl:px-8">
+      <div className="border-t border-line px-4 py-4 text-center text-xs text-white xl:px-8">
         © {bn(new Date().getFullYear())} {STORE_NAME}
       </div>
     </footer>

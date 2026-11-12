@@ -123,7 +123,7 @@ export function SideMenu({
               Relief Care <span className="text-[#FFC069]">bd</span>
             </b>
             {/* Static for now — real account/auth isn't built yet. */}
-            <small className="block text-xs opacity-85">VIP কাস্টমার · VIP-0908-262</small>
+            <small className="block text-xs opacity-85">আরামের বিশ্বস্ত ঠিকানা</small>
           </span>
           <button
             type="button"
@@ -144,7 +144,7 @@ export function SideMenu({
               key={key}
               type="button"
               onClick={() => setTab(key)}
-              className={`-mb-px flex-1 border-b-2 py-2.5 text-sm font-semibold ${
+              className={`-mb-px flex-1 border-b-2 py-2.5 text-sm font-semibold font-sans ${
                 tab === key ? "border-leaf text-leaf-deep" : "border-transparent text-muted"
               }`}
             >

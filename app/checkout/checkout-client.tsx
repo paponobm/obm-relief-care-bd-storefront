@@ -466,16 +466,16 @@ export function CheckoutClient({
                             onClick={() =>
                               i.quantity <= 1 ? remove(i.productId, i.variantId) : setQuantity(i.productId, i.quantity - 1, i.variantId)
                             }
-                            className="flex h-6 w-6 items-center justify-center text-xs font-bold text-ink"
+                            className="flex h-6 w-6 items-center justify-center text-xs font-bold text-ink bg-leaf-soft"
                             aria-label="কমান"
                           >
                             −
                           </button>
-                          <span className="num w-5 text-center text-xs font-semibold text-ink">{bn(i.quantity)}</span>
+                          <span className="num w-5 text-center text-xs font-semibold font-sans text-ink">{bn(i.quantity)}</span>
                           <button
                             type="button"
                             onClick={() => setQuantity(i.productId, i.quantity + 1, i.variantId)}
-                            className="flex h-6 w-6 items-center justify-center text-xs font-bold text-leaf-deep"
+                            className="flex h-6 w-6 items-center justify-center text-xs font-bold text-leaf-deep bg-leaf-soft"
                             aria-label="বাড়ান"
                           >
                             +
@@ -604,8 +604,8 @@ export function CheckoutClient({
           </div>
 
           {totalSavings > 0 && (
-            <p className=" font-sans mb-3 rounded-lg bg-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
-              এই অর্ডারে আপনি মোট {bnTaka(totalSavings)} সাশ্রয় করছেন
+            <p className=" font-sans mb-0 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
+              এই অর্ডারে আপনি মোট <span className="text-xl">{bnTaka(totalSavings)}</span> সাশ্রয় করছেন
             </p>
           )}
 
@@ -614,7 +614,7 @@ export function CheckoutClient({
           <button
             type="submit"
             disabled={submitting || items.length === 0}
-            className="num mt-4 w-full rounded-xl bg-amber py-3.5 font-bold text-white disabled:opacity-50"
+            className="num mt-2 w-full rounded-xl bg-amber py-3.5 font-bold text-white disabled:opacity-50"
           >
             {submitting ? "অর্ডার হচ্ছে…" : `অর্ডার কনফার্ম করুন · ${bnTaka(finalTotal)}`}
           </button>
@@ -635,14 +635,17 @@ export function CheckoutClient({
               <rect x="2" y="6" width="20" height="12" rx="2" />
               <circle cx="12" cy="12" r="2.5" />
             </svg>
-            পেমেন্ট: ক্যাশ অন ডেলিভারি, পণ্য হাতে পেয়ে টাকা দিন
-          </p>
-          <p className="mt-1.5 text-xs text-muted">
-            ভাঙা, ভুল বা মেয়াদোত্তীর্ণ পণ্য এলে বদলে দেব ·{" "}
+            পেমেন্ট: ক্যাশ অন ডেলিভারি, পণ্য হাতে পেয়ে টাকা দিন . 
             <Link href="/policy" className="font-semibold text-leaf underline">
               রিটার্ন নীতি
             </Link>
           </p>
+          {/* <p className="mt-1.5 text-xs text-muted">
+            ভাঙা, ভুল বা মেয়াদোত্তীর্ণ পণ্য এলে বদলে দেব ·{" "}
+            <Link href="/policy" className="font-semibold text-leaf underline">
+              রিটার্ন নীতি
+            </Link>
+          </p> */}
         </div>
       </form>
     </div>

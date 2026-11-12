@@ -532,7 +532,7 @@ export function CartDrawer({
                                     i.variantId,
                                   )
                             }
-                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-ink"
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-ink bg-leaf-soft"
                             aria-label="কমান"
                           >
                             −
@@ -549,7 +549,7 @@ export function CartDrawer({
                                 i.variantId,
                               )
                             }
-                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-leaf-deep"
+                            className="flex h-7 w-7 items-center justify-center text-sm font-bold text-leaf-deep bg-leaf-soft"
                             aria-label="বাড়ান"
                           >
                             +
@@ -630,8 +630,8 @@ export function CartDrawer({
                   <span className="text-amber-deep font-sans">{bnTaka(finalTotal)}</span>
                 </div>
                 {totalSavings > 0 && (
-                  <p className=" font-sans num mb-3 rounded-lg bg-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
-                    এই অর্ডারে আপনি মোট {bnTaka(totalSavings)} সাশ্রয় করছেন
+                  <p className=" font-sans num mb-1 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
+                    এই অর্ডারে আপনি মোট <span className="text-xl">{bnTaka(totalSavings)}</span> সাশ্রয় করছেন
                   </p>
                 )}
               </>
