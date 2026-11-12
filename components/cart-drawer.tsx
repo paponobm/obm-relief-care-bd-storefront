@@ -73,7 +73,7 @@ function SuggestionCard({ product }: { product: PublicProduct }) {
               }
               className="shrink-0 whitespace-nowrap rounded-lg bg-amber px-2.5 py-1.5 text-center text-xs font-semibold text-white"
             >
-              + যোগ করুন
+              +
             </button>
           )}
         </div>

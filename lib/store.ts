@@ -1,6 +1,6 @@
-// export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
 
- const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
+//  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
 
 
 
@@ -183,6 +183,22 @@ export interface CartSuggestionsConfig {
   items: PublicProduct[];
 }
 
+export interface QuizSubConfig {
+  label: string;
+  description: string;
+  items: PublicProduct[];
+}
+
+export interface QuizProblemConfig {
+  label: string;
+  description: string;
+  subs: QuizSubConfig[];
+}
+
+export interface QuizConfig {
+  problems: QuizProblemConfig[];
+}
+
 export interface Review {
   customerName: string;
   location: string | null;
@@ -266,6 +282,14 @@ export function getFlashSale(): Promise<FlashSaleConfig> {
 // means an empty/no-op row, never an error.
 export function getCartSuggestions(): Promise<CartSuggestionsConfig> {
   return getJson<CartSuggestionsConfig>("/cart-suggestions");
+}
+
+// Admin-curated via Settings → Badge & Category → Problem — the symptom-
+// finder quiz's categories, sub-categories, and real product assignments.
+// Replaces the old hardcoded lib/quiz-data.ts list. Empty just means the
+// quiz has no questions to show, never an error.
+export function getQuiz(): Promise<QuizConfig> {
+  return getJson<QuizConfig>("/quiz");
 }
 
 // Admin-curated via Settings → Review — empty means the section doesn't
