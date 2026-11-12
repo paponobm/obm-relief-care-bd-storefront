@@ -2,22 +2,90 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast, type CartItem, useCart } from "@/lib/cart";
 import {
-  getFlashSale,
+  getCartSuggestions,
   type ChannelConfig,
   type PublicProduct,
 } from "@/lib/store";
 import { bn, bnToNumber } from "@/lib/bn-digits";
 import { bnTaka, ProductDealCard } from "./product-deal-card";
 import { ProductArt } from "./product-art";
+import { QuickViewTrigger } from "./quick-view-trigger";
+
+// The cart drawer's own "Suggested Products for you" card — deliberately
+// stripped down from the shared ProductDealCard (no origin badge, no
+// discount badge, no slogan line) since this row's only job is a quick
+// image+title+price glance, matching the reference design. Local to this
+// drawer, not reused elsewhere, so ProductDealCard and every other place it
+// renders (Flash Deal, homepage grid) stay exactly as they are. Image on the
+// left, title/price/add-button stacked on the right — not the usual
+// image-on-top card layout, per the reference mock. Always a plain "+ যোগ
+// করুন" button (not MiniAddToCart's post-add stepper) — this narrow row has
+// no room for a stepper, and quantity is already adjustable in the cart list
+// right above this row.
+function SuggestionCard({ product }: { product: PublicProduct }) {
+  const { add } = useCart();
+  return (
+    <div className="flex w-full items-center gap-2.5 overflow-hidden rounded-card border border-line bg-surface p-2">
+      <QuickViewTrigger
+        product={product}
+        className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-leaf-soft"
+      >
+        <ProductArt
+          name={product.name}
+          categoryName={product.category?.name ?? null}
+          thumbnailUrl={product.thumbnailUrl}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      </QuickViewTrigger>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <QuickViewTrigger product={product} className="line-clamp-2 text-left text-sm font-semibold leading-snug text-ink">
+          {product.name}
+        </QuickViewTrigger>
+        <div className="flex items-center justify-between gap-2">
+          <b className="num font-display shrink-0 text-sm font-bold text-amber-deep">
+            {product.hasVariants ? bnTaka(product.minPrice ?? product.price) : bnTaka(product.price)}
+          </b>
+          {product.hasVariants ? (
+            <Link
+              href={`/product/${product.slug}`}
+              className="shrink-0 whitespace-nowrap rounded-lg bg-amber px-2.5 py-1.5 text-center text-xs font-semibold text-white"
+            >
+              +
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                add(
+                  {
+                    productId: product.productId,
+                    slug: product.slug,
+                    name: product.name,
+                    image: product.thumbnailUrl,
+                    price: product.price,
+                    basePrice: product.price,
+                  },
+                  1,
+                )
+              }
+              className="shrink-0 whitespace-nowrap rounded-lg bg-amber px-2.5 py-1.5 text-center text-xs font-semibold text-white"
+            >
+              + যোগ করুন
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // The header cart button opens this instead of jumping straight to
 // /checkout — matches the reference design's slide-over cart panel.
-// Cross-sell row reuses the same admin-curated Flash Sale list the
-// homepage shows (Settings → Flash Sale) — no separate "recommended"
-// logic invented for this panel.
+// Cross-sell row is its own admin-curated list (Settings → Badge &
+// Category → Cart Suggestions), separate from the homepage's Flash Sale.
 export function CartDrawer({
   open,
   onClose,
@@ -31,6 +99,13 @@ export function CartDrawer({
   const router = useRouter();
   const combo = channel.comboBanners[0];
   const [crossSell, setCrossSell] = useState<PublicProduct[]>([]);
+  // "Suggested Products for you" row's own left/right nudge — just scrolls
+  // the same native overflow-x-auto strip by one card's width instead of a
+  // real paginated carousel, matching the reference design's arrow buttons.
+  const suggestionsScrollRef = useRef<HTMLDivElement>(null);
+  function scrollSuggestions(direction: 1 | -1) {
+    suggestionsScrollRef.current?.scrollBy({ left: direction * 250, behavior: "smooth" });
+  }
   // Dismissible per drawer session (resets on a fresh page load, same as
   // every other piece of this drawer's own local state) — the customer can
   // hide the "নিজের কম্বো বানান" prompt without it ever being able to block
@@ -39,7 +114,7 @@ export function CartDrawer({
 
   useEffect(() => {
     if (!open) return;
-    getFlashSale()
+    getCartSuggestions()
       .then((r) => setCrossSell(r.items))
       .catch(() => setCrossSell([]));
   }, [open]);
@@ -562,16 +637,36 @@ export function CartDrawer({
               </div>
 
               {suggestions.length > 0 && (
-                <div className="mt-5">
-                  <h3 className="font-display mb-3 text-sm font-sans">
-                    {!metMinimum && minimum
-                      ? `যোগ করে ${bnTaka(minimum)} পূরণ করুন`
-                      : "Suggested Products for you"}
-                  </h3>
-                  <div className="flex gap-2.5 overflow-x-auto pb-1">
+                <div className="mt-10">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <h3 className="font-display text-sm font-sans">
+                      {!metMinimum && minimum
+                        ? `যোগ করে ${bnTaka(minimum)} পূরণ করুন`
+                        : "Suggested Products for you"}
+                    </h3>
+                    <div className="flex shrink-0 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => scrollSuggestions(-1)}
+                        aria-label="আগের পণ্য"
+                        className="grid h-7 w-7 place-items-center rounded-full bg-amber text-white text-xl"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollSuggestions(1)}
+                        aria-label="পরের পণ্য"
+                        className="grid h-7 w-7 place-items-center rounded-full bg-amber text-white text-xl"
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+                  <div ref={suggestionsScrollRef} className="scrollbar-none flex gap-2.5 overflow-x-auto pb-1">
                     {suggestions.map((p) => (
-                      <div key={p.productId} className="w-[150px] shrink-0">
-                        <ProductDealCard product={p} />
+                      <div key={p.productId} className="w-[240px] shrink-0">
+                        <SuggestionCard product={p} />
                       </div>
                     ))}
                   </div>

@@ -1,4 +1,4 @@
-// export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+// export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? `"http://localhost:3000/api";
 
  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://obm-central-commerce-hub-backend.onrender.com";
 
@@ -179,6 +179,10 @@ export interface FlashSaleConfig {
   items: PublicProduct[];
 }
 
+export interface CartSuggestionsConfig {
+  items: PublicProduct[];
+}
+
 export interface Review {
   customerName: string;
   location: string | null;
@@ -254,6 +258,14 @@ export function getProduct(slug: string) {
 // section, never an error.
 export function getFlashSale(): Promise<FlashSaleConfig> {
   return getJson<FlashSaleConfig>("/flash-sale");
+}
+
+// Admin-curated via Settings → Badge & Category → Cart Suggestions (which
+// products show in the cart drawer's "Suggested Products for you" row, and
+// in what order) — a dedicated list, separate from Flash Sale. Empty just
+// means an empty/no-op row, never an error.
+export function getCartSuggestions(): Promise<CartSuggestionsConfig> {
+  return getJson<CartSuggestionsConfig>("/cart-suggestions");
 }
 
 // Admin-curated via Settings → Review — empty means the section doesn't
