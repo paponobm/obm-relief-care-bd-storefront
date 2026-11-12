@@ -715,17 +715,17 @@ export function CartDrawer({
                 {showDeliveryLine && (
                   <div className="num mb-1 flex items-center justify-between text-sm text-muted">
                     <span className="font-semibold text-leaf">ডেলিভারি চার্জ</span>
-                    <span className="font-display font-bold text-bold text-black">
+                    <span className="font-sans font-bold text-bold text-black">
                       {deliveryCharge > 0 ? bnTaka(deliveryCharge) : `${bnTaka(channel.deliveryCharge ?? 0)} (ফ্রি)`}
                     </span>
                   </div>
                 )}
                 <div className="num mb-3 flex items-center justify-between text-base font-semibold">
                   <span>সর্বমোট</span>
-                  <span className="text-amber-deep font-display">{bnTaka(finalTotal)}</span>
+                  <span className="text-amber-deep font-sans">{bnTaka(finalTotal)}</span>
                 </div>
                 {totalSavings > 0 && (
-                  <p className=" font-display num mb-1 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
+                  <p className=" font-sans num mb-1 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
                     এই অর্ডারে আপনি মোট <span className="text-xl">{bnTaka(totalSavings)}</span> সাশ্রয় করছেন
                   </p>
                 )}
@@ -733,7 +733,7 @@ export function CartDrawer({
             ) : (
               <div className="num mb-3 flex items-center justify-between text-base font-semibold">
                 <span>সর্বমোট</span>
-                <span className="text-amber-deep font-bold">
+                <span className="text-amber-deep font-sans">
                   {bnTaka(subtotal)}
                 </span>
               </div>

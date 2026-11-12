@@ -96,7 +96,7 @@ export function ProductDealCard({ product }: { product: PublicProduct }) {
           // variant isn't a one-tap add.
           <Link
             href={`/product/${product.slug}`}
-            className="block w-full rounded-lg border border-amber bg-transparent py-1.5 text-center text-md font-semibold text-leaf"
+            className="block w-full rounded-lg border border-orange bg-transparent py-1.5 text-center text-md font-semibold text-leaf"
           >
             {product.variantOptionLabel
               ? `${bn(product.variantCount ?? 0)}টি ${product.variantOptionLabel}`

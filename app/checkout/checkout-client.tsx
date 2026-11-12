@@ -586,25 +586,25 @@ export function CheckoutClient({
             {comboDiscountTotal > 0 && (
               <div className="num mb-1 flex items-center justify-between text-sm text-danger">
                 <span className="font-semibold">কম্বো ছাড়</span>
-                <span className="font-display font-semibold">-{bnTaka(comboDiscountTotal)}</span>
+                <span className="font-sans font-semibold">-{bnTaka(comboDiscountTotal)}</span>
               </div>
             )}
             {showDeliveryLine && (
               <div className="num mb-1 flex items-center justify-between text-sm">
                 <span className="font-semibold text-leaf">ডেলিভারি চার্জ</span>
-                <span className="font-display font-semibold text-ink">
+                <span className="font-sans font-semibold text-ink">
                   {deliveryCharge > 0 ? bnTaka(deliveryCharge) : `${bnTaka(channel?.deliveryCharge ?? 0)} (ফ্রি)`}
                 </span>
               </div>
             )}
             <div className="num mb-3 flex items-center justify-between border-t border-line pt-2 text-base font-semibold">
               <span>সর্বমোট</span>
-              <span className="text-amber-deep font-bold">{bnTaka(finalTotal)}</span>
+              <span className="text-amber-deep font-sans">{bnTaka(finalTotal)}</span>
             </div>
           </div>
 
           {totalSavings > 0 && (
-            <p className=" font-display mb-0 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
+            <p className=" font-sans mb-0 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
               এই অর্ডারে আপনি মোট <span className="text-xl">{bnTaka(totalSavings)}</span> সাশ্রয় করছেন
             </p>
           )}
