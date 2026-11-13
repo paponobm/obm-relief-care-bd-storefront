@@ -268,7 +268,7 @@ export function CheckoutClient({
       setError("১১ ডিজিটের সঠিক মোবাইল নম্বর দিন (যেমন 017XXXXXXXX)");
       return;
     }
-    if (!name.trim() || address.trim().length < 8) {
+    if (!name.trim() || !address.trim()) {
       setError("নাম ও পূর্ণ ঠিকানা লিখুন");
       return;
     }
