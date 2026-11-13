@@ -340,6 +340,49 @@ export function getHealthTips(): Promise<HealthTip[]> {
   return getJson<HealthTip[]>("/health-tips");
 }
 
+export interface UpdatedOrderItem {
+  productId: string;
+  productName: string;
+  variantLabel: string | null;
+  quantity: number;
+  unitPrice: string;
+  discount: string;
+  total: string;
+}
+
+// What the checkout-upsell "অর্ডারে যোগ করুন" add returns — the order's own
+// authoritative totals and full item list after the add, so the
+// confirmation page's "অর্ডারের বিবরণ" can sync to what was actually charged
+// rather than guess at it client-side.
+export interface UpdatedOrder {
+  id: string;
+  subtotal: string;
+  discount: string;
+  shippingFee: string;
+  total: string;
+  items: UpdatedOrderItem[];
+}
+
+// The "একই পার্সেলে যোগ করুন" strip's add action — appends one admin-curated
+// product (Settings → Checkout Management) to the order just placed, at
+// that feature's real server-computed discount, with no added delivery
+// charge. The backend re-checks the order is still PENDING/unapproved and
+// within the countdown window — this can fail (e.g. the offer just expired,
+// or the order got approved in another tab) even though the button was
+// enabled when clicked.
+export async function addUpsellItem(orderId: string, productId: string): Promise<UpdatedOrder> {
+  const res = await fetch(`${API_URL}/store/${CHANNEL_SLUG}/orders/${orderId}/upsell-items`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(Array.isArray(body.message) ? body.message.join(", ") : (body.message ?? "যোগ করা গেল না"));
+  }
+  return body as UpdatedOrder;
+}
+
 export async function placeOrder(payload: {
   customerName: string;
   customerPhone: string;

@@ -8,6 +8,7 @@ import {
   placeOrder,
   saveCheckoutLead,
   getCheckoutUpsell,
+  addUpsellItem,
   getCategories,
   getProducts,
   WHATSAPP_NUMBER,
@@ -20,6 +21,7 @@ import {
 import { ProductArt } from "@/components/product-art";
 import { MiniAddToCart } from "@/components/mini-add-to-cart";
 import { QuickViewTrigger } from "@/components/quick-view-trigger";
+import { QuizModal } from "@/components/quiz-modal";
 import { bnTaka } from "@/components/product-deal-card";
 import { RewardCelebration } from "@/components/reward-celebration";
 import { bn, bnToNumber } from "@/lib/bn-digits";
@@ -90,6 +92,30 @@ export function CheckoutClient({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [order, setOrder] = useState<CreatedOrder | null>(null);
+  // "অর্ডারের বিবরণ" on the confirmation page reads from this snapshot (taken
+  // right before clear() empties the cart in handleSubmit), not live cart
+  // state, which is gone by the time that section renders. Re-synced to the
+  // server's own totals whenever a same-parcel upsell item is added below,
+  // so it never drifts from what the order will actually be charged.
+  const [orderedSummary, setOrderedSummary] = useState<{
+    lines: {
+      key: string;
+      name: string;
+      variantLabel?: string | null;
+      quantity: number;
+      lineTotal: number;
+      // Set whenever this specific line carries its own discount — e.g. one
+      // added from the "একই পার্সেলে যোগ করুন" strip at that feature's
+      // percent off, so it's clear in the breakdown which line that was.
+      discountPercent?: number;
+    }[];
+    discountAmount: number;
+    deliveryCharge: number;
+    finalTotal: number;
+  } | null>(null);
+  // The confirmation page's "কোনটা নেবেন বুঝছেন না?" strip — same real quiz
+  // modal HelpCards opens elsewhere, not a separate flow.
+  const [confirmQuizOpen, setConfirmQuizOpen] = useState(false);
 
   const phoneValid = PHONE_RE.test(phone);
 
@@ -317,9 +343,12 @@ export function CheckoutClient({
   // checkout succeeds.
   const [upsell, setUpsell] = useState<CheckoutUpsellConfig | null>(null);
   const [upsellSecondsLeft, setUpsellSecondsLeft] = useState(0);
-  // Visual-only for now — which upsell items the customer has tapped "যোগ
-  // করুন" on. Not wired to any order change yet; that's follow-up logic.
+  // Which upsell items have been successfully added to the real order (see
+  // addToSameParcel below) — drives each button's "✓ যোগ হয়েছে" state.
   const [addedUpsellIds, setAddedUpsellIds] = useState<Set<string>>(new Set());
+  // The one upsell item currently being added, if any — disables its own
+  // button (and only its own) while the request is in flight.
+  const [addingUpsellId, setAddingUpsellId] = useState<string | null>(null);
   const [moreCategories, setMoreCategories] = useState<PublicCategory[]>([]);
   const [moreCategoryId, setMoreCategoryId] = useState<string | null>(null);
   const [moreProducts, setMoreProducts] = useState<PublicProduct[]>([]);
@@ -353,13 +382,43 @@ export function CheckoutClient({
     return () => clearTimeout(t);
   }, [upsellSecondsLeft]);
 
-  function toggleUpsellAdded(productId: string) {
-    setAddedUpsellIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) next.delete(productId);
-      else next.add(productId);
-      return next;
-    });
+  // Really adds the product to the order just placed, at the strip's
+  // advertised discount and with no added delivery charge — the backend
+  // re-validates the order is still PENDING/unapproved and the countdown
+  // hasn't expired, so this can still fail even with the button enabled
+  // (e.g. the admin approved the order in another tab a moment ago).
+  async function addToSameParcel(productId: string) {
+    if (!order || addedUpsellIds.has(productId) || addingUpsellId) return;
+    setAddingUpsellId(productId);
+    try {
+      const result = await addUpsellItem(order.id, productId);
+      setAddedUpsellIds((prev) => new Set(prev).add(productId));
+      // Synced to the server's own totals — never guessed client-side — so
+      // "অর্ডারের বিবরণ" always matches what the order will actually charge.
+      setOrderedSummary({
+        lines: result.items.map((i) => {
+          const lineDiscount = Number(i.discount);
+          const rawLineTotal = Number(i.unitPrice) * i.quantity;
+          return {
+            key: i.productId,
+            name: i.productName,
+            variantLabel: i.variantLabel,
+            quantity: i.quantity,
+            lineTotal: Number(i.total),
+            discountPercent:
+              lineDiscount > 0 && rawLineTotal > 0 ? Math.round((lineDiscount / rawLineTotal) * 100) : undefined,
+          };
+        }),
+        discountAmount: Number(result.discount),
+        deliveryCharge: Number(result.shippingFee),
+        finalTotal: Number(result.total),
+      });
+      toast("পার্সেলে যোগ হয়েছে ✓");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "যোগ করা গেল না, আবার চেষ্টা করুন");
+    } finally {
+      setAddingUpsellId(null);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -393,6 +452,24 @@ export function CheckoutClient({
         couponCode: appliedCoupon?.code,
       });
       setOrder(result);
+      // Snapshotted before clear() empties the cart — "অর্ডারের বিবরণ" below
+      // reads from this, not the live (now-empty) cart.
+      setOrderedSummary({
+        lines: items.map((i) => ({
+          key: `${i.productId}:${i.variantId ?? ""}`,
+          name: i.name,
+          variantLabel: i.variantLabel,
+          quantity: i.quantity,
+          lineTotal: i.price * i.quantity,
+          discountPercent:
+            i.basePrice && i.basePrice > i.price
+              ? Math.round(((i.basePrice - i.price) / i.basePrice) * 100)
+              : undefined,
+        })),
+        discountAmount: discountAmount + comboDiscountTotal,
+        deliveryCharge,
+        finalTotal,
+      });
       clear();
     } catch (err) {
       setError(err instanceof Error ? err.message : "অর্ডার করতে সমস্যা হয়েছে, আবার চেষ্টা করুন।");
@@ -442,6 +519,7 @@ export function CheckoutClient({
                         ? Math.round(p.price * (1 - upsell.discountPercent / 100))
                         : p.price;
                     const added = addedUpsellIds.has(p.productId);
+                    const adding = addingUpsellId === p.productId;
                     return (
                       <div key={p.productId} className="w-32 shrink-0 rounded-xl border border-line bg-surface p-2.5">
                         <div className="relative h-20 w-full overflow-hidden rounded-lg bg-leaf-soft">
@@ -463,12 +541,13 @@ export function CheckoutClient({
                         </p>
                         <button
                           type="button"
-                          onClick={() => toggleUpsellAdded(p.productId)}
-                          className={`num mt-1.5 w-full rounded-lg py-1.5 text-xs font-semibold ${
+                          disabled={added || adding}
+                          onClick={() => addToSameParcel(p.productId)}
+                          className={`num mt-1.5 w-full rounded-lg py-1.5 text-xs font-semibold disabled:opacity-70 ${
                             added ? "bg-leaf-soft text-leaf-deep" : "bg-leaf text-white"
                           }`}
                         >
-                          {added ? "✓ যোগ হয়েছে" : "অর্ডারে যোগ করুন"}
+                          {added ? "✓ যোগ হয়েছে" : adding ? "যোগ হচ্ছে…" : "অর্ডারে যোগ করুন"}
                         </button>
                       </div>
                     );
@@ -551,6 +630,76 @@ export function CheckoutClient({
             )}
           </div>
         )}
+
+        {orderedSummary && (
+          <div className="rounded-card bg-surface p-5">
+            <p className="font-display mb-3 text-base text-ink">অর্ডারের বিবরণ</p>
+            <div className="flex flex-col gap-1.5 text-sm">
+              {orderedSummary.lines.map((i) => (
+                <div key={i.key} className="flex items-center justify-between gap-3">
+                  <span className="text-ink">
+                    {i.name}
+                    {i.variantLabel && <span className="text-muted"> · {i.variantLabel}</span>}
+                    <span className="num text-muted"> × {bn(i.quantity)}</span>
+                    {i.discountPercent ? (
+                      <span className="num text-leaf-deep"> (+{bn(i.discountPercent)}% ছাড়)</span>
+                    ) : null}
+                  </span>
+                  <b className="num shrink-0 font-sans text-ink">{bnTaka(i.lineTotal)}</b>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-col gap-1.5 border-t border-line pt-3 text-sm">
+              {orderedSummary.discountAmount > 0 && (
+                <div className="num flex items-center justify-between text-danger">
+                  <span className="font-semibold">পরিমাণে ছাড়</span>
+                  <span className="font-sans font-semibold">-{bnTaka(orderedSummary.discountAmount)}</span>
+                </div>
+              )}
+              <div className="num flex items-center justify-between">
+                <span className="font-semibold text-muted">ডেলিভারি</span>
+                <span className="font-sans font-semibold text-ink">
+                  {orderedSummary.deliveryCharge > 0 ? bnTaka(orderedSummary.deliveryCharge) : "ফ্রি"}
+                </span>
+              </div>
+              <div className="num flex items-center justify-between pt-1">
+                <span className="font-bold text-ink">মোট পরিশোধ</span>
+                <span className="font-display font-sans text-lg font-bold text-amber-deep">
+                  {bnTaka(orderedSummary.finalTotal)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {confirmQuizOpen && <QuizModal onClose={() => setConfirmQuizOpen(false)} />}
+        <div className="flex flex-col items-start justify-between gap-3 rounded-card bg-amber-soft p-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="font-display text-base text-leaf-deep">কোনটা নেবেন বুঝছেন না?</p>
+            <p className="mt-1 text-xs text-muted">
+              সমস্যা লিখে দিন, আমাদের প্রতিনিধি কল করে সঠিক পণ্য বেছে দেবেন। কোনো চার্জ নেই।
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirmQuizOpen(true)}
+              className="rounded-xl bg-amber px-4 py-2 text-sm font-semibold text-white"
+            >
+              ফ্রি কল-পরামর্শ
+            </button>
+            {WHATSAPP_NUMBER && (
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-leaf px-4 py-2 text-sm font-semibold text-leaf-deep"
+              >
+                হোয়াটসঅ্যাপে লিখুন
+              </a>
+            )}
+          </div>
+        </div>
 
         <Link href="/products" className="block rounded-xl bg-amber px-5 py-2.5 text-center font-semibold text-white">
           আরও কেনাকাটা
