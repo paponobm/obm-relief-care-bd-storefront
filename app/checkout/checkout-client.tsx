@@ -27,6 +27,10 @@ export function CheckoutClient({
   const [note, setNote] = useState("");
   const [coupon, setCoupon] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
+  // The code field/Apply button stay collapsed behind a plain question line
+  // until clicked — most customers don't have a code, so the field doesn't
+  // need to sit open by default.
+  const [showCoupon, setShowCoupon] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number } | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -530,45 +534,57 @@ export function CheckoutClient({
             </label>
           )}
 
-          <div className="mb-3 flex gap-2">
-            <input
-              value={coupon}
-              onChange={(e) => {
-                setCoupon(e.target.value);
-                // A changed code needs re-applying — don't keep charging the
-                // previous one's discount while a new, unverified code sits
-                // in the box.
-                setAppliedCoupon(null);
-                setCouponMsg("");
-              }}
-              placeholder="কুপন কোড"
-              className="flex-1 rounded-xl border border-dashed border-amber bg-bg px-3.5 py-2.5 uppercase text-ink outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const code = coupon.trim().toUpperCase();
-                if (!code) {
-                  setAppliedCoupon(null);
-                  setCouponMsg("কুপন কোড লিখুন");
-                  return;
-                }
-                const match = (channel?.coupons ?? []).find((c) => c.code.toUpperCase() === code);
-                if (match) {
-                  setAppliedCoupon({ code: match.code, discountPercent: match.discountPercent });
-                  setCouponMsg(`✓ ${bn(match.discountPercent)}% ছাড় প্রযোজ্য হয়েছে`);
-                } else {
-                  setAppliedCoupon(null);
-                  setCouponMsg("এই কুপন কোডটি সঠিক নয়");
-                }
-              }}
-              className="rounded-xl bg-leaf px-4 font-semibold text-white"
-            >
-              প্রয়োগ
-            </button>
-          </div>
-          {couponMsg && (
-            <p className={`num mb-2 text-xs font-semibold ${appliedCoupon ? "text-leaf-deep" : "text-danger"}`}>{couponMsg}</p>
+          <button
+            type="button"
+            onClick={() => setShowCoupon((v) => !v)}
+            className="mb-3 flex w-full items-center justify-between text-sm font-semibold text-leaf"
+          >
+            আপনার কি কোনো কুপন, গিফট ভাউচার বা রেফারেল কোড আছে?
+            <span className={`transition-transform ${showCoupon ? "rotate-180" : ""}`}>⌄</span>
+          </button>
+          {showCoupon && (
+            <>
+              <div className="mb-3 flex gap-2">
+                <input
+                  value={coupon}
+                  onChange={(e) => {
+                    setCoupon(e.target.value);
+                    // A changed code needs re-applying — don't keep charging the
+                    // previous one's discount while a new, unverified code sits
+                    // in the box.
+                    setAppliedCoupon(null);
+                    setCouponMsg("");
+                  }}
+                  placeholder="কুপন কোড"
+                  className="flex-1 rounded-xl border border-dashed border-amber bg-bg px-3.5 py-2.5 uppercase text-ink outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const code = coupon.trim().toUpperCase();
+                    if (!code) {
+                      setAppliedCoupon(null);
+                      setCouponMsg("কুপন কোড লিখুন");
+                      return;
+                    }
+                    const match = (channel?.coupons ?? []).find((c) => c.code.toUpperCase() === code);
+                    if (match) {
+                      setAppliedCoupon({ code: match.code, discountPercent: match.discountPercent });
+                      setCouponMsg(`✓ ${bn(match.discountPercent)}% ছাড় প্রযোজ্য হয়েছে`);
+                    } else {
+                      setAppliedCoupon(null);
+                      setCouponMsg("এই কুপন কোডটি সঠিক নয়");
+                    }
+                  }}
+                  className="rounded-xl bg-leaf px-4 font-semibold text-white"
+                >
+                  প্রয়োগ
+                </button>
+              </div>
+              {couponMsg && (
+                <p className={`num mb-2 text-xs font-semibold ${appliedCoupon ? "text-leaf-deep" : "text-danger"}`}>{couponMsg}</p>
+              )}
+            </>
           )}
 
           <div className="border-t border-line pt-3">

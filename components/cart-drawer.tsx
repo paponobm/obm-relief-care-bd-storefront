@@ -725,7 +725,7 @@ export function CartDrawer({
                   <button
                     type="button"
                     onClick={() => setShowBreakdown((v) => !v)}
-                    className="flex items-center gap-1 font-sans text-sm font-semibold text-leaf"
+                    className="flex items-center gap-1 font-sans text-xm font-semibold text-leaf"
                   >
                     হিসাব দেখুন
                     <span className={`transition-transform ${showBreakdown ? "rotate-180" : ""}`}>⌄</span>
