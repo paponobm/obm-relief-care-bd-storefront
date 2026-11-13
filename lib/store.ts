@@ -179,6 +179,17 @@ export interface FlashSaleConfig {
   items: PublicProduct[];
 }
 
+// Admin-curated via Settings → Checkout Management — the order-confirmation
+// page's "একই পার্সেলে যোগ করুন" upsell strip. durationMinutes is relative:
+// the countdown starts fresh when the confirmation page loads, unlike Flash
+// Sale's single shared endsAt deadline.
+export interface CheckoutUpsellConfig {
+  enabled: boolean;
+  durationMinutes: number;
+  discountPercent: number;
+  items: PublicProduct[];
+}
+
 export interface CartSuggestionsConfig {
   items: PublicProduct[];
 }
@@ -274,6 +285,14 @@ export function getProduct(slug: string) {
 // section, never an error.
 export function getFlashSale(): Promise<FlashSaleConfig> {
   return getJson<FlashSaleConfig>("/flash-sale");
+}
+
+// Admin-curated via Settings → Checkout Management (which products show in
+// the order-confirmation page's "একই পার্সেলে যোগ করুন" strip, the countdown
+// length, and the extra discount percent) — disabled or empty just means the
+// section doesn't render, never an error.
+export function getCheckoutUpsell(): Promise<CheckoutUpsellConfig> {
+  return getJson<CheckoutUpsellConfig>("/checkout-upsell");
 }
 
 // Admin-curated via Settings → Badge & Category → Cart Suggestions (which

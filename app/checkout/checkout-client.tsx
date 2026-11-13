@@ -4,13 +4,68 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast, type CartItem, useCart } from "@/lib/cart";
-import { placeOrder, saveCheckoutLead, WHATSAPP_NUMBER, type ChannelConfig, type CreatedOrder, type PublicProduct } from "@/lib/store";
+import {
+  placeOrder,
+  saveCheckoutLead,
+  getCheckoutUpsell,
+  getCategories,
+  getProducts,
+  WHATSAPP_NUMBER,
+  type ChannelConfig,
+  type CheckoutUpsellConfig,
+  type CreatedOrder,
+  type PublicCategory,
+  type PublicProduct,
+} from "@/lib/store";
 import { ProductArt } from "@/components/product-art";
+import { MiniAddToCart } from "@/components/mini-add-to-cart";
+import { QuickViewTrigger } from "@/components/quick-view-trigger";
 import { bnTaka } from "@/components/product-deal-card";
 import { RewardCelebration } from "@/components/reward-celebration";
 import { bn, bnToNumber } from "@/lib/bn-digits";
 
 const PHONE_RE = /^01\d{9}$/;
+
+// mm:ss for the "একই পার্সেলে যোগ করুন" countdown.
+function formatCountdown(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${bn(String(m).padStart(2, "0"))}:${bn(String(s).padStart(2, "0"))}`;
+}
+
+// The order-confirmation page's status tracker — purely presentational, no
+// real per-order status feed exists yet, so it always shows "অর্ডার গ্রহণ"
+// (just placed) as the current step, same as every order reaching this page.
+const CONFIRMATION_STEPS = ["অর্ডার গ্রহণ", "ফোনে কনফার্ম", "প্যাকিং", "ডেলিভারি"];
+function OrderStatusTracker() {
+  return (
+    <div className="mx-auto mt-5 flex w-full max-w-md items-start">
+      {CONFIRMATION_STEPS.map((label, i) => (
+        <div key={label} className="flex flex-1 items-center last:flex-none">
+          <div className="flex flex-col items-center gap-1.5">
+            <div
+              className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                i === 0 ? "bg-leaf text-white" : "border-2 border-line bg-surface text-muted"
+              }`}
+            >
+              {i === 0 ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="m5 12 5 5 9-10" />
+                </svg>
+              ) : (
+                <span className="num">{bn(i + 1)}</span>
+              )}
+            </div>
+            <span className={`w-20 text-center text-[11px] font-semibold ${i === 0 ? "text-leaf-deep" : "text-muted"}`}>
+              {label}
+            </span>
+          </div>
+          {i < CONFIRMATION_STEPS.length - 1 && <div className="mx-1 mt-[-18px] h-0.5 flex-1 bg-line" />}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function CheckoutClient({
   channel,
@@ -257,6 +312,56 @@ export function CheckoutClient({
     return () => clearTimeout(t);
   }, [phone, name, address, items, phoneValid]);
 
+  // Order-confirmation page extras — fetched only once an order actually
+  // exists, since there's nothing to show (and nothing safe to price) before
+  // checkout succeeds.
+  const [upsell, setUpsell] = useState<CheckoutUpsellConfig | null>(null);
+  const [upsellSecondsLeft, setUpsellSecondsLeft] = useState(0);
+  // Visual-only for now — which upsell items the customer has tapped "যোগ
+  // করুন" on. Not wired to any order change yet; that's follow-up logic.
+  const [addedUpsellIds, setAddedUpsellIds] = useState<Set<string>>(new Set());
+  const [moreCategories, setMoreCategories] = useState<PublicCategory[]>([]);
+  const [moreCategoryId, setMoreCategoryId] = useState<string | null>(null);
+  const [moreProducts, setMoreProducts] = useState<PublicProduct[]>([]);
+  const orderId = order?.id;
+
+  useEffect(() => {
+    if (!orderId) return;
+    getCheckoutUpsell()
+      .then((cfg) => {
+        setUpsell(cfg);
+        if (cfg.enabled && cfg.items.length > 0) setUpsellSecondsLeft(cfg.durationMinutes * 60);
+      })
+      .catch(() => {});
+    getCategories()
+      .then(setMoreCategories)
+      .catch(() => {});
+  }, [orderId]);
+
+  useEffect(() => {
+    if (!orderId) return;
+    getProducts({ categoryId: moreCategoryId ?? undefined, limit: 8 })
+      .then((res) => setMoreProducts(res.items))
+      .catch(() => {});
+  }, [orderId, moreCategoryId]);
+
+  // Ticks the countdown down to 0, then stops (the strip itself hides once
+  // it reaches 0 — see the render below).
+  useEffect(() => {
+    if (upsellSecondsLeft <= 0) return;
+    const t = setTimeout(() => setUpsellSecondsLeft((s) => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [upsellSecondsLeft]);
+
+  function toggleUpsellAdded(productId: string) {
+    setAddedUpsellIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -297,17 +402,157 @@ export function CheckoutClient({
   }
 
   if (order) {
+    const showUpsell = Boolean(upsell?.enabled && upsell.items.length > 0 && upsellSecondsLeft > 0);
     return (
-      <div className="mx-auto max-w-md rounded-card bg-surface p-8 text-center">
-        <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-leaf text-white">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <path d="m5 12 5 5 9-10" />
-          </svg>
+      <div className="mx-auto flex w-full flex-col gap-4">
+        <div className="rounded-card bg-surface p-8 text-center">
+          <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-leaf text-white">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="m5 12 5 5 9-10" />
+            </svg>
+          </div>
+          <h1 className="font-display text-2xl">ধন্যবাদ, অর্ডার হয়েছে!</h1>
+          <p className="num mt-2 text-lg text-amber-deep">#{order.orderNumber}</p>
+          <p className="mt-2 text-sm text-muted">আমাদের প্রতিনিধি শীঘ্রই কল করে অর্ডার কনফার্ম করবেন।</p>
+          <OrderStatusTracker />
         </div>
-        <h1 className="font-display text-2xl">ধন্যবাদ, অর্ডার হয়েছে!</h1>
-        <p className="num mt-2 text-lg text-amber-deep">#{order.orderNumber}</p>
-        <p className="mt-2 text-sm text-muted">আমাদের প্রতিনিধি শীঘ্রই কল করে অর্ডার কনফার্ম করবেন।</p>
-        <Link href="/products" className="mt-5 inline-block rounded-xl bg-amber px-5 py-2.5 font-semibold text-white">
+
+        {(showUpsell || moreProducts.length > 0) && (
+          <div className="rounded-card border-2 border-dashed border-amber bg-amber-soft p-4">
+            {showUpsell && upsell && (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-display text-base text-ink">একই পার্সেলে যোগ করুন, ডেলিভারি চার্জ লাগবে না</p>
+                    <p className="mt-1 text-xs text-muted">
+                      আপনার অর্ডার এখনো প্যাক হয়নি। এখন যোগ করলে প্রতিটি পণ্যে
+                      {upsell.discountPercent > 0 ? ` অতিরিক্ত ${bn(upsell.discountPercent)}% ছাড়,` : ""} আলাদা অর্ডার
+                      করতে হবে না।
+                    </p>
+                  </div>
+                  <div className="shrink-0 rounded-xl bg-surface px-3 py-2 text-center">
+                    <p className="num font-display text-lg text-amber-deep">{formatCountdown(upsellSecondsLeft)}</p>
+                    <p className="text-[10px] text-muted">অফার বাকি</p>
+                  </div>
+                </div>
+                <div className="scrollbar-none mt-3 flex gap-3 overflow-x-auto pb-1">
+                  {upsell.items.map((p) => {
+                    const discountedPrice =
+                      upsell.discountPercent > 0
+                        ? Math.round(p.price * (1 - upsell.discountPercent / 100))
+                        : p.price;
+                    const added = addedUpsellIds.has(p.productId);
+                    return (
+                      <div key={p.productId} className="w-32 shrink-0 rounded-xl border border-line bg-surface p-2.5">
+                        <div className="relative h-20 w-full overflow-hidden rounded-lg bg-leaf-soft">
+                          <ProductArt
+                            name={p.name}
+                            categoryName={p.category?.name ?? null}
+                            thumbnailUrl={p.thumbnailUrl}
+                            className="absolute inset-0 h-full w-full object-cover"
+                          />
+                        </div>
+                        <p className="line-clamp-2 mt-1.5 min-h-[2.4em] text-xs font-semibold leading-snug text-ink">
+                          {p.name}
+                        </p>
+                        <p className="num mt-1 flex items-baseline gap-1 text-sm font-bold text-amber-deep">
+                          {bnTaka(discountedPrice)}
+                          {discountedPrice !== p.price && (
+                            <s className="font-sans text-[10px] font-normal text-muted">{bnTaka(p.price)}</s>
+                          )}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => toggleUpsellAdded(p.productId)}
+                          className={`num mt-1.5 w-full rounded-lg py-1.5 text-xs font-semibold ${
+                            added ? "bg-leaf-soft text-leaf-deep" : "bg-leaf text-white"
+                          }`}
+                        >
+                          {added ? "✓ যোগ হয়েছে" : "অর্ডারে যোগ করুন"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {moreProducts.length > 0 && (
+              <div className={showUpsell ? "mt-4 border-t border-amber pt-4" : ""}>
+                <p className="font-display mb-2 text-base text-ink">বাসায় আর কারো জন্য কিছু লাগবে?</p>
+                <nav className="scrollbar-none flex gap-2 overflow-x-auto pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setMoreCategoryId(null)}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
+                      !moreCategoryId ? "border-leaf bg-leaf text-white" : "border-line text-ink"
+                    }`}
+                  >
+                    সব পণ্য
+                  </button>
+                  {moreCategories.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setMoreCategoryId(c.id)}
+                      className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
+                        moreCategoryId === c.id ? "border-leaf bg-leaf text-white" : "border-line text-ink"
+                      }`}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </nav>
+                <div className="scrollbar-none mt-3 flex gap-3 overflow-x-auto pb-1">
+                  {moreProducts.map((p) => (
+                    <div key={p.productId} className="w-32 shrink-0 rounded-xl border border-line bg-surface p-2.5">
+                      <div className="relative h-20 w-full overflow-hidden rounded-lg bg-leaf-soft">
+                        <ProductArt
+                          name={p.name}
+                          categoryName={p.category?.name ?? null}
+                          thumbnailUrl={p.thumbnailUrl}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                      </div>
+                      <p className="line-clamp-2 mt-1.5 min-h-[2.4em] text-xs font-semibold leading-snug text-ink">
+                        {p.name}
+                      </p>
+                      <p className="num mt-1 flex items-baseline gap-1 text-sm font-bold text-amber-deep">
+                        {p.hasVariants ? (
+                          <>
+                            {bnTaka(p.minPrice ?? p.price)}
+                            {p.maxPrice !== undefined && p.maxPrice !== p.minPrice ? `–${bnTaka(p.maxPrice)}` : ""}
+                          </>
+                        ) : (
+                          <>
+                            {bnTaka(p.price)}
+                            {p.compareAtPrice ? (
+                              <s className="font-sans text-[10px] font-normal text-muted">{bnTaka(p.compareAtPrice)}</s>
+                            ) : null}
+                          </>
+                        )}
+                      </p>
+                      <div className="mt-1.5 text-xs">
+                        {p.hasVariants ? (
+                          <QuickViewTrigger
+                            product={p}
+                            className="block w-full rounded-lg border border-leaf bg-transparent py-1.5 text-center text-xs font-semibold text-leaf"
+                          >
+                            বাছুন
+                          </QuickViewTrigger>
+                        ) : (
+                          <MiniAddToCart product={p} />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <Link href="/products" className="block rounded-xl bg-amber px-5 py-2.5 text-center font-semibold text-white">
           আরও কেনাকাটা
         </Link>
       </div>
