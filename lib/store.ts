@@ -40,6 +40,12 @@ export interface ComboTier {
   // order once this combo group's own subtotal reaches this tier — same
   // real server-enforced waiver as a spend-more reward's own freeDelivery.
   freeDelivery?: boolean;
+  // Marks this as the VIP tier — reaching it (in a combo group's own
+  // subtotal) shows the checkout's VIP banner. The real coupon only exists
+  // once the order is actually placed — the backend generates a fresh,
+  // unique one on the spot (see CreatedOrder.vipCoupon below), never a
+  // value sent here ahead of time.
+  vip?: boolean;
 }
 
 export interface ComboBannerConfig {
@@ -242,6 +248,11 @@ export interface CreatedOrder {
   id: string;
   orderNumber: string;
   total: string;
+  // Set only when this order's own combo group reached a VIP-flagged
+  // pricing tier — a real, unique coupon the backend just generated
+  // (StorefrontService.createOrder), shown once on this confirmation page.
+  // null/absent means this order didn't qualify.
+  vipCoupon?: { code: string; discountPercent: number } | null;
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -264,6 +275,8 @@ export function getProducts(
     page?: number;
     categoryId?: string;
     search?: string;
+    minPrice?: number;
+    maxPrice?: number;
   } = {},
 ) {
   const qs = new URLSearchParams();
@@ -272,12 +285,26 @@ export function getProducts(
   if (params.page) qs.set("page", String(params.page));
   if (params.categoryId) qs.set("categoryId", params.categoryId);
   if (params.search) qs.set("search", params.search);
+  if (params.minPrice !== undefined) qs.set("minPrice", String(params.minPrice));
+  if (params.maxPrice !== undefined) qs.set("maxPrice", String(params.maxPrice));
   const suffix = qs.toString() ? `?${qs}` : "";
   return getJson<ProductPage>(`/products${suffix}`);
 }
 
 export function getProduct(slug: string) {
   return getJson<PublicProduct>(`/products/${slug}`);
+}
+
+// The price-filter slider's own "lowest to highest" bounds — the real
+// floor/ceiling across whatever category/search is active, ignoring any
+// price selection already made on the slider itself. null when nothing
+// matches (no slider to show).
+export function getPriceBounds(params: { categoryId?: string; search?: string } = {}) {
+  const qs = new URLSearchParams();
+  if (params.categoryId) qs.set("categoryId", params.categoryId);
+  if (params.search) qs.set("search", params.search);
+  const suffix = qs.toString() ? `?${qs}` : "";
+  return getJson<{ min: number; max: number } | null>(`/products/price-range${suffix}`);
 }
 
 // Admin-curated via Settings → Flash Sale (which products, what order, and
@@ -338,6 +365,18 @@ export interface HealthTip {
 // doesn't render.
 export function getHealthTips(): Promise<HealthTip[]> {
   return getJson<HealthTip[]>("/health-tips");
+}
+
+export interface PolicySection {
+  title: string;
+  points: string[];
+}
+
+// Admin-curated via Settings → Policy — the /policy page's sections. Always
+// has at least the backend's own two default sections (Delivery, Return &
+// Exchange) even on a channel that's never touched this tab.
+export function getPolicy(): Promise<PolicySection[]> {
+  return getJson<PolicySection[]>("/policy");
 }
 
 export interface UpdatedOrderItem {

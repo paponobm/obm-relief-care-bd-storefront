@@ -1,23 +1,29 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
-import { getCategories, getProducts } from "@/lib/store";
+import { PriceRangeSlider } from "@/components/price-range-slider";
+import { getCategories, getPriceBounds, getProducts } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { category?: string; search?: string; page?: string };
+  searchParams: { category?: string; search?: string; page?: string; minPrice?: string; maxPrice?: string };
 }) {
   const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
-  const [categories, result] = await Promise.all([
+  const minPrice = searchParams.minPrice ? Number(searchParams.minPrice) : undefined;
+  const maxPrice = searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined;
+  const [categories, result, priceBounds] = await Promise.all([
     getCategories(),
     getProducts({
       categoryId: searchParams.category,
       search: searchParams.search,
+      minPrice,
+      maxPrice,
       page,
       limit: 24,
     }),
+    getPriceBounds({ categoryId: searchParams.category, search: searchParams.search }),
   ]);
 
   const activeCategory = categories.find((c) => c.id === searchParams.category);
@@ -29,6 +35,8 @@ export default async function ProductsPage({
     const qs = new URLSearchParams();
     if (searchParams.category) qs.set("category", searchParams.category);
     if (searchParams.search) qs.set("search", searchParams.search);
+    if (searchParams.minPrice) qs.set("minPrice", searchParams.minPrice);
+    if (searchParams.maxPrice) qs.set("maxPrice", searchParams.maxPrice);
     if (targetPage > 1) qs.set("page", String(targetPage));
     const s = qs.toString();
     return s ? `/products?${s}` : "/products";
@@ -58,10 +66,22 @@ export default async function ProductsPage({
         ))}
       </nav>
 
-      <div className="flex items-baseline justify-between">
-        <h1 className="font-display text-xl">{title}</h1>
-        <span className="num text-sm text-muted">{result.total}টি পণ্য</span>
-      </div>
+      {priceBounds && (
+        <PriceRangeSlider
+          // Forces a remount (fresh internal state) whenever the category
+          // or search changes — otherwise this Client Component keeps its
+          // old minVal/maxVal across a soft Link navigation even though its
+          // bounds/initial props just changed underneath it.
+          key={`${searchParams.category ?? ""}:${searchParams.search ?? ""}`}
+          bounds={priceBounds}
+          initialMin={minPrice ?? priceBounds.min}
+          initialMax={maxPrice ?? priceBounds.max}
+          categoryId={searchParams.category}
+          search={searchParams.search}
+        />
+      )}
+
+      <h1 className="font-display text-xl">{title}</h1>
 
       {result.items.length === 0 ? (
         <p className="rounded-card bg-surface p-8 text-center text-muted">কোনো পণ্য পাওয়া যায়নি।</p>

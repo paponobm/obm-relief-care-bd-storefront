@@ -40,11 +40,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-screen bg-bg text-ink antialiased">
+      <body className="flex min-h-screen flex-col bg-bg text-ink antialiased">
         <ThemeProvider>
           <CartProvider quantityDiscounts={channel.quantityDiscounts}>
             <Header channel={channel} categories={categories} />
-            <main className="mx-auto max-w-7xl px-4 py-6 xl:px-8">{children}</main>
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 xl:px-8">{children}</main>
             <Footer />
             <WhatsappWidget />
             <QuickViewModal />

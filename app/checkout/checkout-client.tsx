@@ -28,6 +28,32 @@ import { bn, bnToNumber } from "@/lib/bn-digits";
 
 const PHONE_RE = /^01\d{9}$/;
 
+const BN_MONTHS = [
+  "জানুয়ারি",
+  "ফেব্রুয়ারি",
+  "মার্চ",
+  "এপ্রিল",
+  "মে",
+  "জুন",
+  "জুলাই",
+  "আগস্ট",
+  "সেপ্টেম্বর",
+  "অক্টোবর",
+  "নভেম্বর",
+  "ডিসেম্বর",
+];
+function bnMonthYear(date: Date): string {
+  return `${BN_MONTHS[date.getMonth()]} ${bn(date.getFullYear())}`;
+}
+
+// The VIP card's own membership number — cosmetic, derived from the real
+// order number so it's stable and distinct per order, not a separately
+// tracked membership record.
+function vipMemberNumber(orderNumber: string): string {
+  const digits = (orderNumber.replace(/\D/g, "").slice(-7) || "0000000").padStart(7, "0");
+  return `VIP-${bn(digits.slice(0, 4))}-${bn(digits.slice(4))}`;
+}
+
 // mm:ss for the "একই পার্সেলে যোগ করুন" countdown.
 function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -116,6 +142,9 @@ export function CheckoutClient({
   // The confirmation page's "কোনটা নেবেন বুঝছেন না?" strip — same real quiz
   // modal HelpCards opens elsewhere, not a separate flow.
   const [confirmQuizOpen, setConfirmQuizOpen] = useState(false);
+  // The real, backend-generated VIP coupon this order earned, if any — set
+  // from placeOrder()'s own response, not guessed client-side.
+  const [vipEarned, setVipEarned] = useState<{ code: string; discountPercent: number } | null>(null);
 
   const phoneValid = PHONE_RE.test(phone);
 
@@ -202,7 +231,12 @@ export function CheckoutClient({
   // spend-more rewards box, so the combo card's own "আর ৳X যোগ করলে …" hint
   // below can find the very next one regardless of admin row order.
   const allComboTiers = (channel?.comboBanners?.[0]?.tiers ?? [])
-    .map((t) => ({ amount: bnToNumber(t.title), description: t.description, freeDelivery: t.freeDelivery }))
+    .map((t) => ({
+      amount: bnToNumber(t.title),
+      description: t.description,
+      freeDelivery: t.freeDelivery,
+      vip: t.vip,
+    }))
     .sort((a, b) => a.amount - b.amount);
   const comboGroupIds = Array.from(new Set(items.filter((i) => i.comboGroupId).map((i) => i.comboGroupId!)));
   const comboGroups = comboGroupIds.map((groupId) => {
@@ -244,6 +278,10 @@ export function CheckoutClient({
     // delivery charge below, independent of the spend-more reward's own
     // freeDelivery (standalone items only).
     const groupFreeDelivery = allComboTiers.some((t) => groupGross >= t.amount && t.freeDelivery);
+    // The VIP tier reached, if any — Settings → Home Page Combo → Pricing
+    // tier cards → VIP. Highest-amount VIP tier wins, same "best tier"
+    // convention as everything else here.
+    const groupVipTier = [...allComboTiers].reverse().find((t) => groupGross >= t.amount && t.vip);
     return {
       groupId,
       groupItems,
@@ -255,10 +293,15 @@ export function CheckoutClient({
       nextTier,
       nextTierText,
       groupFreeDelivery,
+      groupVipTier,
     };
   });
   const comboDiscountTotal = comboGroups.reduce((sum, g) => sum + g.groupDiscount, 0);
   const comboFreeDelivery = comboGroups.some((g) => g.groupFreeDelivery);
+  // "এই অর্ডারে আপনি পাচ্ছেন VIP কাস্টমার কার্ড" — shown pre-order under the
+  // savings box, and real: the VIP card + its coupon code on the
+  // confirmation page below come from this same tier.
+  const vipTierReached = comboGroups.map((g) => g.groupVipTier).find((t) => t);
   const standaloneItems = items.filter((i) => !i.comboGroupId);
 
   // "ডেলিভারি চার্জ" — Settings → Other Settings → Delivery charge, waived
@@ -452,6 +495,10 @@ export function CheckoutClient({
         couponCode: appliedCoupon?.code,
       });
       setOrder(result);
+      // Server-authoritative — the backend only sets this when the order it
+      // just created actually qualified, and the code is the real,
+      // just-generated one, never guessed client-side.
+      setVipEarned(result.vipCoupon ?? null);
       // Snapshotted before clear() empties the cart — "অর্ডারের বিবরণ" below
       // reads from this, not the live (now-empty) cart.
       setOrderedSummary({
@@ -488,11 +535,59 @@ export function CheckoutClient({
               <path d="m5 12 5 5 9-10" />
             </svg>
           </div>
-          <h1 className="font-display text-2xl">ধন্যবাদ, অর্ডার হয়েছে!</h1>
+          <h1 className="font-display text-2xl">
+            ধন্যবাদ{name.trim() ? ` ${name.trim()}` : ""}, অর্ডার হয়েছে!
+          </h1>
           <p className="num mt-2 text-lg text-amber-deep">#{order.orderNumber}</p>
           <p className="mt-2 text-sm text-muted">আমাদের প্রতিনিধি শীঘ্রই কল করে অর্ডার কনফার্ম করবেন।</p>
           <OrderStatusTracker />
         </div>
+
+        {vipEarned && (
+          <div className="rounded-card border border-line bg-surface p-4 sm:flex sm:items-stretch sm:gap-4">
+            <div className="flex min-w-[220px] shrink-0 flex-col justify-between rounded-xl bg-leaf-deep p-4 text-white">
+              <div className="flex items-start justify-between">
+                <span className="text-sm font-semibold">{channel?.name ?? "VIP"}</span>
+                <span className="font-display text-lg font-bold text-amber">VIP</span>
+              </div>
+              <div className="mt-6">
+                <p className="truncate text-sm font-semibold">{name.trim() || "কাস্টমার"}</p>
+                <p className="num text-xs tracking-wide text-white/80">{vipMemberNumber(order.orderNumber)}</p>
+              </div>
+              <div className="num mt-4 flex items-center justify-between text-[10px] text-white/70">
+                <span>সদস্য: {bnMonthYear(new Date())}</span>
+                <span>মেয়াদ: {bnMonthYear(new Date(new Date().setMonth(new Date().getMonth() + 6)))}</span>
+              </div>
+            </div>
+            <div className="mt-3 flex-1 sm:mt-0">
+              <p className="font-display text-base text-ink">অভিনন্দন! আপনি এখন VIP কাস্টমার</p>
+              <ul className="mt-2 space-y-1 text-sm text-muted">
+                <li className="flex items-start gap-1.5">
+                  <span className="shrink-0 text-amber">★</span>
+                  পরের ৬ মাস সব অর্ডারে ফ্রি ডেলিভারি
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="shrink-0 text-amber">★</span>
+                  কল-পরামর্শ অগ্রাধিকার, লাইনে অপেক্ষা নেই
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="shrink-0 text-amber">★</span>
+                  নতুন অফার ও ডিল সবার আগে জানবেন
+                </li>
+              </ul>
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border-2 border-dashed border-amber bg-amber-soft px-3 py-2">
+                <div>
+                  <p className="text-xs text-muted">আপনার VIP কুপন কোড</p>
+                  <p className="num font-display text-lg font-bold text-amber-deep">{vipEarned.code}</p>
+                </div>
+                {vipEarned.discountPercent > 0 && (
+                  <p className="num shrink-0 text-sm font-semibold text-leaf-deep">{bn(vipEarned.discountPercent)}% ছাড়</p>
+                )}
+              </div>
+              <p className="mt-1.5 text-xs text-muted">পরের যেকোনো অর্ডারে একবার ব্যবহার করা যাবে।</p>
+            </div>
+          </div>
+        )}
 
         {(showUpsell || moreProducts.length > 0) && (
           <div className="rounded-card border-2 border-dashed border-amber bg-amber-soft p-4">
@@ -1036,8 +1131,17 @@ export function CheckoutClient({
             )}
           </div>
 
+          {vipTierReached && (
+            <p className="flex items-center justify-between gap-2 rounded-lg bg-leaf px-3 py-2 text-sm font-semibold text-white">
+              <span>এই অর্ডারে আপনি পাচ্ছেন</span>
+              <span className="font-display">VIP কাস্টমার কার্ড</span>
+            </p>
+          )}
+
           {totalSavings > 0 && (
-            <p className=" font-sans mb-0 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep">
+            <p
+              className={`font-sans mb-0 rounded-lg border-2 border-leaf-soft px-3 py-2 text-center text-sm font-semibold text-leaf-deep ${vipTierReached ? "mt-2" : ""}`}
+            >
               এই অর্ডারে আপনি মোট <span className="text-xl">{bnTaka(totalSavings)}</span> সাশ্রয় করছেন
             </p>
           )}

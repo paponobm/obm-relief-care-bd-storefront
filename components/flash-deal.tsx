@@ -20,7 +20,7 @@ export function FlashDeal({ config }: { config: FlashSaleConfig }) {
             <FlashCountdown endsAt={config.endsAt} />
           </div>
         )}
-        <Link href="/products" className="ml-auto font-semibold text-leaf">
+        <Link href="/flash-deal" className="ml-auto font-semibold text-leaf">
           সব অফার দেখুন →
         </Link>
       </div>
