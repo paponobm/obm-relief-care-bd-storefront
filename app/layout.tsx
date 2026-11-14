@@ -46,7 +46,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Header channel={channel} categories={categories} />
             <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 xl:px-8">{children}</main>
             <Footer />
-            <WhatsappWidget />
+            <WhatsappWidget
+              storeName={channel.name}
+              logoUrl={channel.logoUrl}
+              customerCarePhone={channel.customerCarePhone}
+            />
             <QuickViewModal />
             <ToastHost />
           </CartProvider>

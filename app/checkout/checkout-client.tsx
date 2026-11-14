@@ -11,7 +11,6 @@ import {
   addUpsellItem,
   getCategories,
   getProducts,
-  WHATSAPP_NUMBER,
   type ChannelConfig,
   type CheckoutUpsellConfig,
   type CreatedOrder,
@@ -24,6 +23,7 @@ import { QuickViewTrigger } from "@/components/quick-view-trigger";
 import { QuizModal } from "@/components/quiz-modal";
 import { bnTaka } from "@/components/product-deal-card";
 import { RewardCelebration } from "@/components/reward-celebration";
+import { toWhatsappNumber } from "@/components/whatsapp-widget";
 import { bn, bnToNumber } from "@/lib/bn-digits";
 
 const PHONE_RE = /^01\d{9}$/;
@@ -783,9 +783,9 @@ export function CheckoutClient({
             >
               ফ্রি কল-পরামর্শ
             </button>
-            {WHATSAPP_NUMBER && (
+            {channel?.customerCarePhone && (
               <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                href={`https://wa.me/${toWhatsappNumber(channel.customerCarePhone)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-xl border border-leaf px-4 py-2 text-sm font-semibold text-leaf-deep"
@@ -1156,9 +1156,9 @@ export function CheckoutClient({
             {submitting ? "অর্ডার হচ্ছে…" : `অর্ডার কনফার্ম করুন · ${bnTaka(finalTotal)}`}
           </button>
 
-          {WHATSAPP_NUMBER && (
+          {channel?.customerCarePhone && (
             <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              href={`https://wa.me/${toWhatsappNumber(channel.customerCarePhone)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2.5 block w-full rounded-xl border border-leaf py-3 text-center font-semibold text-leaf-deep"
