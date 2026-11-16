@@ -48,7 +48,7 @@ const country = importCountry(product);
           </span>
         )}
         {country && (
-          <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md bg-amber px-1.5 py-0.5 text-xs font-semibold text-white">
+          <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border border-line bg-surface px-1.5 py-0.5 text-xs font-semibold text-ink">
             {COUNTRY_FLAGS[country] ? `${COUNTRY_FLAGS[country]} ` : ""}
             {country}
           </span>

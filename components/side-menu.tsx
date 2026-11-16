@@ -5,7 +5,7 @@ import Link from "next/link";
 import { STORE_HOURS, WHATSAPP_NUMBER, type ChannelConfig, type PublicCategory, type SocialPlatform } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 
-const PLATFORM_META: Record<SocialPlatform, { label: string; color: string }> = {
+export const PLATFORM_META: Record<SocialPlatform, { label: string; color: string }> = {
   facebook: { label: "Facebook", color: "#1877F2" },
   instagram: { label: "Instagram", color: "#E1306C" },
   youtube: { label: "YouTube", color: "#FF0000" },
