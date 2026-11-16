@@ -99,7 +99,7 @@ export default async function HomePage() {
         <div className="mb-3 mt-7 flex items-baseline justify-between">
           <h2 className="font-display font-bold  text-2xl">সকল পণ্য</h2>
           <Link href="/products" className="font-semibold text-leaf">
-            সব দেখুন →
+            সব পণ্য দেখুন →
           </Link>
         </div>
         {all.items.length === 0 ? (

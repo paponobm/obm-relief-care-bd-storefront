@@ -9,6 +9,7 @@ import { bnTaka } from "./product-deal-card";
 import { getProduct, type PublicProduct } from "@/lib/store";
 import { getRecentlyViewedSlugs } from "@/lib/recently-viewed";
 import { bn } from "@/lib/bn-digits";
+import { Spinner } from "./spinner";
 
 // Image on the left, name/price/buy-control on the right — this section's
 // own card design, deliberately separate from ProductDealCard (which stays
@@ -66,6 +67,10 @@ function RecentlyViewedCard({ product }: { product: PublicProduct }) {
 // so there's nothing for the server to render.
 export function RecentlyViewed() {
   const [items, setItems] = useState<PublicProduct[] | null>(null);
+  // Only true while slugs actually exist and their products are being
+  // fetched — an empty history resolves to [] on the same tick, so it never
+  // flashes a spinner it doesn't need.
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const slugs = getRecentlyViewedSlugs(10);
@@ -73,14 +78,31 @@ export function RecentlyViewed() {
       setItems([]);
       return;
     }
+    setLoading(true);
     let cancelled = false;
     Promise.all(slugs.map((slug) => getProduct(slug).catch(() => null))).then((results) => {
-      if (!cancelled) setItems(results.filter((p): p is PublicProduct => p !== null));
+      if (!cancelled) {
+        setItems(results.filter((p): p is PublicProduct => p !== null));
+        setLoading(false);
+      }
     });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  if (loading) {
+    return (
+      <section className="mt-5">
+        <h2 className="mb-3 font-bold text-2xl">
+          সম্প্রতি <span className="text-amber">দেখেছেন</span>
+        </h2>
+        <div className="flex justify-center py-6">
+          <Spinner />
+        </div>
+      </section>
+    );
+  }
 
   if (!items || items.length === 0) return null;
 

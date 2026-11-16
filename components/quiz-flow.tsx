@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart";
 import { getQuiz, type PublicProduct, type QuizConfig } from "@/lib/store";
 import { ProductArt } from "@/components/product-art";
 import { bnTaka } from "@/components/product-deal-card";
+import { Spinner } from "@/components/spinner";
 
 const EMPTY_QUIZ: QuizConfig = { problems: [] };
 
@@ -82,7 +83,18 @@ export function QuizFlow({ onFinish }: { onFinish?: () => void } = {}) {
     onFinish?.();
   }
 
-  if (loaded && quiz.problems.length === 0) {
+  // Previously fell straight through to the step-0 grid with nothing in
+  // it yet (quiz still EMPTY_QUIZ) — looked like a broken/empty quiz for
+  // the brief moment before getQuiz() resolves.
+  if (!loaded) {
+    return (
+      <div className="mx-auto flex max-w-2xl justify-center rounded-card bg-surface p-10">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (quiz.problems.length === 0) {
     return (
       <div className="mx-auto max-w-2xl rounded-card bg-surface p-5 text-center text-sm text-muted">
         এই মুহূর্তে কোনো প্রশ্ন সেট করা নেই।
