@@ -53,6 +53,7 @@ interface GridEntry {
   compareAtPrice: number | null;
   imageUrl: string | null;
   origin: string | null;
+  forWho: string[];
 }
 
 function sameLine(a: { productId: string; variantId?: string }, b: { productId: string; variantId?: string }): boolean {
@@ -199,6 +200,7 @@ export function ComboBuilder({
           categoryId: p.category?.id ?? null,
           categoryName: p.category?.name ?? null,
           origin,
+          forWho: p.forWho,
         };
         if (p.hasVariants && p.variants && p.variants.length > 0) {
           return p.variants.map((v) => ({
@@ -220,12 +222,16 @@ export function ComboBuilder({
     return gridEntries.filter(
       (e) =>
         (!categoryId || e.categoryId === categoryId) &&
+        // Strict: a product only shows under a persona it's actually been
+        // tagged with (Specifications / Key Features → For Who) — a
+        // never-tagged product doesn't show under any persona.
+        e.forWho.includes(comboFor) &&
         (!q ||
           e.name.toLowerCase().includes(q) ||
           (e.slogan ?? "").toLowerCase().includes(q) ||
           (e.categoryName ?? "").toLowerCase().includes(q)),
     );
-  }, [gridEntries, categoryId, search]);
+  }, [gridEntries, categoryId, search, comboFor]);
 
   function inc(e: GridEntry) {
     setCombo((prev) => {

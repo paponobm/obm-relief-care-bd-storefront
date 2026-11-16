@@ -152,6 +152,10 @@ export interface PublicProduct {
   inStock: boolean;
   slogan: string | null;
   specifications: ProductSpecification[] | null;
+  // "কার জন্য" tags (e.g. "পরিবারের জন্য") — admin-set in Specifications /
+  // Key Features, multi-select. Powers the combo builder's "কম্বোটা কার
+  // জন্য?" filter. Empty for a product never tagged.
+  forWho: string[];
   hasVariants: boolean;
   // Only present when hasVariants — the Flash Deal card's "৳min–৳max" and
   // its "২টি সাইজ · বাছুন"-style button label. variantOptionLabel is the
