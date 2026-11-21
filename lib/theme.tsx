@@ -14,11 +14,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
+    // No OS prefers-color-scheme check — a first-time visitor is always
+    // "light" (the useState default above) unless they already picked
+    // dark explicitly, in which case the pre-paint script in layout.tsx
+    // already set data-theme="dark" before this even runs.
     const current = document.documentElement.getAttribute("data-theme");
     if (current === "dark" || current === "light") {
       setTheme(current);
-    } else {
-      setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     }
   }, []);
 
