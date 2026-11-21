@@ -700,9 +700,9 @@ export function CheckoutClient({
                         ) : (
                           <>
                             {bnTaka(p.price)}
-                            {p.compareAtPrice ? (
+                            {p.compareAtPrice && p.compareAtPrice > p.price && (
                               <s className="font-sans text-[10px] font-normal text-muted">{bnTaka(p.compareAtPrice)}</s>
-                            ) : null}
+                            )}
                           </>
                         )}
                       </p>

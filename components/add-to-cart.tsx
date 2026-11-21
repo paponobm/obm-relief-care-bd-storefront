@@ -73,16 +73,14 @@ export function AddToCart({ product }: { product: PublicProduct }) {
             <b className="font-display text-2xl text-amber-deep">
               {bnTaka(price)}
             </b>
-            {compareAtPrice ? (
+            {discount > 0 && (
               <>
-                <s className="text-sm text-muted">{bnTaka(compareAtPrice)}</s>
-                {discount > 0 && (
-                  <span className="rounded-md bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber-deep">
-                    {bn(discount)}% ছাড়
-                  </span>
-                )}
+                <s className="text-sm text-muted">{bnTaka(compareAtPrice!)}</s>
+                <span className="rounded-md bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber-deep">
+                  {bn(discount)}% ছাড়
+                </span>
               </>
-            ) : null}
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {variants.map((v) => (

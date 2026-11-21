@@ -44,20 +44,22 @@ export function importCountry(product: PublicProduct): string | null {
 // — callers control sizing via their own wrapper (a fixed-width shrink-0
 // box for a horizontal row, or a plain grid cell).
 export function ProductDealCard({ product }: { product: PublicProduct }) {
-  // Calculated straight from these two numbers, whichever is bigger — not
-  // gated on it being a "real" discount (compareAtPrice > price). Whatever
-  // the admin put in Regular Price and Sell Price, that's what shows here.
-  const discount = product.compareAtPrice
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
-    : 0;
+  // Only a real discount (compareAtPrice > price) ever shows a badge — same
+  // guard as ProductCard's own discount calc. Without it, a product whose
+  // Regular Price was entered lower than its Sell Price (bad data, not a
+  // real markdown) rendered a false "-N%" badge here.
+  const discount =
+    product.compareAtPrice && product.compareAtPrice > product.price
+      ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+      : 0;
   const country = importCountry(product);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-card border border-line bg-surface">
       <QuickViewTrigger product={product} className="relative block aspect-square w-full bg-leaf-soft">
-        {discount !== 0 && (
+        {discount > 0 && (
           <span className="num absolute left-2 top-2 z-10 rounded-md bg-danger px-1.5 py-0.5 text-xs font-bold text-white">
-            -{bn(Math.abs(discount))}%
+            -{bn(discount)}%
           </span>
         )}
         {country && (
@@ -86,7 +88,9 @@ export function ProductDealCard({ product }: { product: PublicProduct }) {
         ) : (
           <div className="num mt-auto flex items-baseline gap-2">
             <b className="font-display font-bold text-base text-lg text-amber-deep">{bnTaka(product.price)}</b>
-            {product.compareAtPrice ? <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s> : null}
+            {product.compareAtPrice && product.compareAtPrice > product.price && (
+              <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s>
+            )}
           </div>
         )}
 

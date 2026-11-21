@@ -98,16 +98,14 @@ export function QuickViewModal() {
           {!product.hasVariants && (
             <div className="num flex items-baseline gap-2">
               <b className="font-display text-xl text-amber-deep">{bnTaka(product.price)}</b>
-              {product.compareAtPrice ? (
+              {discount > 0 && (
                 <>
-                  <s className="text-sm text-muted">{bnTaka(product.compareAtPrice)}</s>
-                  {discount > 0 && (
-                    <span className="rounded-md bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber-deep">
-                      {bn(discount)}% ছাড়
-                    </span>
-                  )}
+                  <s className="text-sm text-muted">{bnTaka(product.compareAtPrice!)}</s>
+                  <span className="rounded-md bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber-deep">
+                    {bn(discount)}% ছাড়
+                  </span>
                 </>
-              ) : null}
+              )}
             </div>
           )}
 

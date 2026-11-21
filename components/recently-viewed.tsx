@@ -40,7 +40,9 @@ function RecentlyViewedCard({ product }: { product: PublicProduct }) {
         ) : (
           <div className="num flex items-baseline gap-2">
             <b className="font-display text-base font-bold text-amber-deep">{bnTaka(product.price)}</b>
-            {product.compareAtPrice ? <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s> : null}
+            {product.compareAtPrice && product.compareAtPrice > product.price && (
+              <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s>
+            )}
           </div>
         )}
 

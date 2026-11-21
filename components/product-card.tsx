@@ -73,7 +73,9 @@ const country = importCountry(product);
         ) : (
           <div className="num mt-auto flex items-baseline gap-2">
             <b className="font-display font-bold text-base text-lg text-amber-deep">{bnTaka(product.price)}</b>
-            {product.compareAtPrice ? <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s> : null}
+            {product.compareAtPrice && product.compareAtPrice > product.price && (
+              <s className="font-sans text-xs text-muted">{bnTaka(product.compareAtPrice)}</s>
+            )}
           </div>
         )}
 
