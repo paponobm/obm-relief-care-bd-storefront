@@ -30,6 +30,7 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   Japan: "🇯🇵",
   Pakistan: "🇵🇰",
   "Sri Lanka": "🇱🇰",
+  Singapore: "🇸🇬",
 };
 
 export function importCountry(product: PublicProduct): string | null {
