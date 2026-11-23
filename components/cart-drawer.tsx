@@ -592,7 +592,7 @@ export function CartDrawer({
                           </p>
                           <p className="num text-xs text-muted font-sans">
                             {bnTaka(i.basePrice ?? i.price)} × {bn(i.quantity)}{" "}
-                            = {bnTaka(i.price * i.quantity)}
+                            = {bnTaka((i.basePrice ?? i.price) * i.quantity)}
                           </p>
                           {tier &&
                             (tier.nextQuantity !== null ? (

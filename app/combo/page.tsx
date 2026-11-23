@@ -3,7 +3,14 @@ import { getCategories, getChannelConfig, getProducts } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export default async function ComboPage() {
+export default async function ComboPage({
+  searchParams,
+}: {
+  // Which combo banner on the homepage was clicked (its index in
+  // channel.comboBanners) — see components/combo-banner.tsx. Defaults to
+  // the first one for a bare /combo visit.
+  searchParams: { combo?: string };
+}) {
   const [channel, categories, products] = await Promise.all([
     getChannelConfig().catch(() => null),
     getCategories().catch(() => []),
@@ -13,5 +20,8 @@ export default async function ComboPage() {
     getProducts({ limit: 100 }).then((r) => r.items).catch(() => []),
   ]);
 
-  return <ComboBuilder tiers={channel?.comboBanners[0]?.tiers ?? []} categories={categories} products={products} />;
+  const comboIndex = Number(searchParams.combo ?? 0) || 0;
+  const tiers = channel?.comboBanners[comboIndex]?.tiers ?? channel?.comboBanners[0]?.tiers ?? [];
+
+  return <ComboBuilder tiers={tiers} categories={categories} products={products} />;
 }

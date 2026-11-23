@@ -6,10 +6,13 @@ import type { ComboBannerConfig } from "@/lib/store";
 // Home Page Combo), no hardcoded fallback: unset means it doesn't render.
 // The combo builder itself isn't built yet, so this links to a "coming
 // soon" page rather than faking the interactive flow.
-function ComboBannerCard({ config }: { config: ComboBannerConfig }) {
+function ComboBannerCard({ config, index }: { config: ComboBannerConfig; index: number }) {
   return (
     <Link
-      href="/combo"
+      // Which of the admin's (possibly several) combo banners this card
+      // represents — /combo reads this back to pick that banner's own
+      // tiers, instead of always building from the first one.
+      href={`/combo?combo=${index}`}
       className="relative flex h-full flex-col gap-3 overflow-hidden rounded-[20px] border-[1.5px] border-amber bg-amber-soft p-[18px] text-left text-ink"
     >
       <span
@@ -57,14 +60,14 @@ export function ComboBanner({ configs }: { configs: ComboBannerConfig[] }) {
   if (configs.length === 1) {
     return (
       <div className="mt-[22px]">
-        <ComboBannerCard config={configs[0]} />
+        <ComboBannerCard config={configs[0]} index={0} />
       </div>
     );
   }
   return (
     <div className="mt-[22px] grid grid-cols-1 gap-3 sm:grid-cols-2">
       {configs.map((config, i) => (
-        <ComboBannerCard key={i} config={config} />
+        <ComboBannerCard key={i} config={config} index={i} />
       ))}
     </div>
   );
