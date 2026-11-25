@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PublicProduct } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 import { ProductArt } from "./product-art";
@@ -11,15 +11,28 @@ export function ProductGallery({
   product,
   categoryName,
   discount,
+  activeImage,
 }: {
   product: PublicProduct;
   categoryName: string | null;
   discount: number;
+  // Picking a variant with its own photo (see AddToCart's onVariantChange)
+  // should switch the main image the same way clicking a thumbnail below
+  // does — this is that override, re-applied whenever it changes so a
+  // variant pick always wins over whatever was clicked before it.
+  activeImage?: string | null;
 }) {
   const gallery = Array.from(
     new Set([product.thumbnailUrl, ...product.images].filter((u): u is string => Boolean(u))),
   );
   const [active, setActive] = useState<string | null>(gallery[0] ?? null);
+
+  useEffect(() => {
+    if (activeImage !== undefined) setActive(activeImage ?? gallery[0] ?? null);
+    // Re-run only on an actual variant-image change — `gallery` is a fresh
+    // array every render and isn't what this effect is reacting to.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeImage]);
 
   return (
     <div className="flex flex-col gap-2">

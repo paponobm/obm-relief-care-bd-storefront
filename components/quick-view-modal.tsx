@@ -16,10 +16,16 @@ import type { PublicProduct } from "@/lib/store";
 // opening this never costs an extra fetch.
 export function QuickViewModal() {
   const [product, setProduct] = useState<PublicProduct | null>(null);
+  // Defaults to the product's own thumbnail; AddToCart's onVariantChange
+  // below swaps it to whichever variant is picked (when that variant has
+  // its own photo).
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
     function onQuickView(e: Event) {
-      setProduct((e as CustomEvent<PublicProduct>).detail);
+      const p = (e as CustomEvent<PublicProduct>).detail;
+      setProduct(p);
+      setActiveImage(p.thumbnailUrl);
     }
     window.addEventListener("relief-care:quick-view", onQuickView);
     return () => window.removeEventListener("relief-care:quick-view", onQuickView);
@@ -72,7 +78,7 @@ export function QuickViewModal() {
         </button>
 
         <div className="relative mx-auto mb-3 aspect-square w-full max-w-[220px] overflow-hidden rounded-xl bg-leaf-soft">
-          <ProductArt name={product.name} categoryName={category?.name ?? null} thumbnailUrl={product.thumbnailUrl} />
+          <ProductArt name={product.name} categoryName={category?.name ?? null} thumbnailUrl={activeImage} />
         </div>
 
         <div className="flex flex-col gap-3">
@@ -111,7 +117,10 @@ export function QuickViewModal() {
 
           {product.slogan && <p className="text-sm text-muted">{product.slogan}</p>}
 
-          <AddToCart product={product} />
+          <AddToCart
+            product={product}
+            onVariantChange={(v) => setActiveImage(v?.imageUrl || product.thumbnailUrl)}
+          />
 
           <Link
             href={`/product/${product.slug}`}

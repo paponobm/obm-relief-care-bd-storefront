@@ -1,13 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { qtyDiscountRate, useCart } from "@/lib/cart";
-import { WHATSAPP_NUMBER, type PublicProduct } from "@/lib/store";
+import { WHATSAPP_NUMBER, type PublicProduct, type ProductVariantOption } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 import { bnTaka } from "./product-deal-card";
 
-export function AddToCart({ product }: { product: PublicProduct }) {
+export function AddToCart({
+  product,
+  onVariantChange,
+}: {
+  product: PublicProduct;
+  // Notifies a parent that only needs to know which variant is picked —
+  // e.g. the product gallery/quick-view swapping its main image to that
+  // variant's own photo — without taking over this component's own
+  // selection state.
+  onVariantChange?: (variant: ProductVariantOption | null) => void;
+}) {
   const { add, quantityDiscounts } = useCart();
   const router = useRouter();
   // Quantity 1 is always the free baseline tile; one more tile per
@@ -19,10 +29,27 @@ export function AddToCart({ product }: { product: PublicProduct }) {
   const [added, setAdded] = useState(false);
 
   const variants = product.hasVariants ? (product.variants ?? []) : [];
+  // Falling back to the first row when nothing is marked isDefault is only
+  // ever needed for price/stock math below — admin never actually chose
+  // that one, so it shouldn't silently take over the main image too (see
+  // the picked/explicit gate on the effect right below).
   const [variantId, setVariantId] = useState(
     () => variants.find((v) => v.isDefault)?.id ?? variants[0]?.id,
   );
   const selected = variants.find((v) => v.id === variantId) ?? null;
+  const hasExplicitDefault = variants.some((v) => v.isDefault);
+  const [picked, setPicked] = useState(false);
+
+  useEffect(() => {
+    // A default isn't mandatory — with none set and nothing picked yet,
+    // tell the caller "no variant image override" (it falls back to the
+    // product's own thumbnail) instead of whichever row happens to be
+    // first in the list.
+    onVariantChange?.(hasExplicitDefault || picked ? selected : null);
+    // Only the selection/picked state itself should re-notify —
+    // `onVariantChange` is a fresh closure every render on the caller's side.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, picked]);
 
   const price = selected?.price ?? product.price;
   const compareAtPrice = selected
@@ -87,7 +114,10 @@ export function AddToCart({ product }: { product: PublicProduct }) {
               <button
                 key={v.id}
                 type="button"
-                onClick={() => setVariantId(v.id)}
+                onClick={() => {
+                  setVariantId(v.id);
+                  setPicked(true);
+                }}
                 className={`rounded-lg border px-3.5 py-2 text-sm font-semibold ${
                   v.id === variantId
                     ? "border-leaf bg-leaf text-white"
