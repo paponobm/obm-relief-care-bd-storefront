@@ -102,7 +102,7 @@ export function CheckoutClient({
   channel: ChannelConfig | null;
   suggestions: PublicProduct[];
 }) {
-  const { items, subtotal, setQuantity, remove, add, clear } = useCart();
+  const { items, subtotal, setQuantity, remove, add, clear, quantityDiscounts } = useCart();
   const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -359,6 +359,28 @@ export function CheckoutClient({
   function removeCombo(groupItems: CartItem[]) {
     groupItems.forEach((i) => remove(i.productId, i.variantId, { silent: true }));
     toast("কার্ট থেকে ডিলিট হয়েছে");
+  }
+
+  // Same quantity-discount nudge as CartDrawer's own standalone items —
+  // kept identical so the message/behavior doesn't drift between the two
+  // places a cart line shows up.
+  function tierMessage(
+    quantity: number,
+    basePrice?: number,
+  ): { text: string; nextQuantity: number | null } | null {
+    if (basePrice === undefined) return null;
+    const sorted = [...quantityDiscounts].sort((a, b) => a.quantity - b.quantity);
+    const earnedTier = [...sorted].reverse().find((t) => t.quantity <= quantity);
+    const nextTier = sorted.find((t) => t.quantity > quantity);
+    const earned = earnedTier ? `${bn(earnedTier.discountPercent)}% ছাড় পাচ্ছেন` : null;
+    const next = nextTier
+      ? `আর ${bn(nextTier.quantity - quantity)}টা নিলে ${bn(nextTier.discountPercent)}% ছাড়`
+      : null;
+    if (!earned && !next) return null;
+    return {
+      text: [earned, next].filter(Boolean).join(" · "),
+      nextQuantity: nextTier ? nextTier.quantity : null,
+    };
   }
 
   // One real, in-stock suggestion not already in the cart — the same
@@ -927,7 +949,9 @@ export function CheckoutClient({
                   </div>
                 </div>
               ))}
-              {standaloneItems.map((i) => (
+              {standaloneItems.map((i) => {
+                const tier = tierMessage(i.quantity, i.basePrice);
+                return (
                 <div key={`${i.productId}:${i.variantId ?? ""}`} className="flex items-center justify-between gap-3 text-sm">
                   <div className="flex min-w-0 gap-3">
                     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-leaf-soft">
@@ -949,6 +973,18 @@ export function CheckoutClient({
                       <p className="num font-sans text-xs text-muted">
                         {bnTaka(i.basePrice ?? i.price)} × {bn(i.quantity)}
                       </p>
+                      {tier &&
+                        (tier.nextQuantity !== null ? (
+                          <button
+                            type="button"
+                            onClick={() => setQuantity(i.productId, tier.nextQuantity!, i.variantId)}
+                            className="num mt-0.5 block text-xs font-semibold text-amber-deep font-display"
+                          >
+                            {tier.text} →
+                          </button>
+                        ) : (
+                          <p className="font-sans num mt-0.5 text-xs font-semibold text-amber-deep">{tier.text}</p>
+                        ))}
                       {/* <button
                         type="button"
                         onClick={() => remove(i.productId, i.variantId)}
@@ -982,9 +1018,10 @@ export function CheckoutClient({
                       </div>
                     </div>
                   </div>
-                  <b className="num shrink-0 font-sans">{bnTaka(i.price * i.quantity)}</b>
+                  <b className="num shrink-0 font-sans">{bnTaka((i.basePrice ?? i.price) * i.quantity)}</b>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

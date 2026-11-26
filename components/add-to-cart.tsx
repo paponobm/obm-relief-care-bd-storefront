@@ -181,9 +181,9 @@ export function AddToCart({
       </ul>
 
       <p
-        className={`text-sm font-semibold ${inStock ? "text-leaf-deep" : "text-danger"}`}
+        className={`text-sm font-semibold text-leaf-deep`}
       >
-        {inStock ? "স্টকে আছে" : "স্টকে নেই"}
+        স্টকে আছে
       </p>
 
       <div className="grid grid-cols-2 gap-2">
