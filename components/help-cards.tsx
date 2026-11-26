@@ -2,18 +2,32 @@
 
 import { useState } from "react";
 import { QuizModal } from "./quiz-modal";
+import { CallRequestModal } from "./call-request-modal";
 
 // Two promo cards shown right after Flash Deal — "take the quiz" and
 // "request a call". The quiz card opens the same 3-question symptom
-// matcher (lib/quiz-data.ts) as a popup, not a page navigation — the
-// call card is still deliberately inert — no WhatsApp number/phone is
-// configured yet (lib/store.ts), so it stays non-navigating until one is
-// added, same reasoning as AddToCart's own WhatsApp link.
-export function HelpCards() {
+// matcher (lib/quiz-data.ts) as a popup, not a page navigation; the call
+// card opens its own popup (CallRequestModal) that saves a real,
+// centrally-reviewed request (see /admin/counseling).
+export function HelpCards({
+  storeName,
+  customerCarePhone,
+}: {
+  storeName: string;
+  customerCarePhone: string | null;
+}) {
   const [quizOpen, setQuizOpen] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
   return (
     <section className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
       {quizOpen && <QuizModal onClose={() => setQuizOpen(false)} />}
+      {callOpen && (
+        <CallRequestModal
+          onClose={() => setCallOpen(false)}
+          storeName={storeName}
+          customerCarePhone={customerCarePhone}
+        />
+      )}
       <button
         type="button"
         onClick={() => setQuizOpen(true)}
@@ -33,7 +47,11 @@ export function HelpCards() {
         <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-leaf-deep">শুরু করুন →</span>
       </button>
 
-      <div className="flex items-center gap-3 rounded-[20px] border-[1.5px] border-amber bg-amber-soft p-[18px]">
+      <button
+        type="button"
+        onClick={() => setCallOpen(true)}
+        className="flex items-center gap-3 rounded-[20px] border-[1.5px] border-amber bg-amber-soft p-[18px] text-left"
+      >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber text-white">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" />
@@ -44,7 +62,7 @@ export function HelpCards() {
           <span className="block text-sm text-muted">সমস্যা লিখুন, আমাদের অভিজ্ঞ প্রতিনিধি কল করে সঠিক পণ্য বলে দেবেন</span>
         </span>
         <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-amber-deep">কল চাই →</span>
-      </div>
+      </button>
     </section>
   );
 }

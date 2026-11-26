@@ -8,7 +8,7 @@ import { AllProductsGrid } from "@/components/all-products-grid";
 import { Reviews } from "@/components/reviews";
 import { HealthTips } from "@/components/health-tips";
 import { RecentlyViewed } from "@/components/recently-viewed";
-import { getCategories, getChannelConfig, getFlashSale, getHealthTips, getProducts, getReviews } from "@/lib/store";
+import { getCategories, getChannelConfig, getFlashSale, getHealthTips, getProducts, getReviews, STORE_NAME } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +78,7 @@ export default async function HomePage() {
 
       <FlashDeal config={flashSale} />
 
-      <HelpCards />
+      <HelpCards storeName={channel?.name ?? STORE_NAME} customerCarePhone={channel?.customerCarePhone ?? null} />
 
       {/* {featured.items.length > 0 && (
         <section>

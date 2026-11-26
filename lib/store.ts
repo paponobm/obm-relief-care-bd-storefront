@@ -457,6 +457,31 @@ export async function saveCheckoutLead(payload: {
   }).catch(() => undefined);
 }
 
+export interface CallRequestResult {
+  requestCode: string;
+}
+
+// "ফ্রি কল-পরামর্শ নিন" — a visitor asks to be called back instead of
+// browsing/ordering themselves. Reviewed centrally in the admin's
+// Counseling page, not scoped to this one storefront, though the request
+// still records which channel it came from for reference.
+export async function createCallRequest(payload: {
+  name: string;
+  phone: string;
+  problem: string;
+}): Promise<CallRequestResult> {
+  const res = await fetch(`${API_URL}/store/${CHANNEL_SLUG}/call-requests`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(Array.isArray(body.message) ? body.message.join(", ") : (body.message ?? "Request failed"));
+  }
+  return body as CallRequestResult;
+}
+
 export function formatTaka(value: number): string {
   return `৳${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value)}`;
 }
