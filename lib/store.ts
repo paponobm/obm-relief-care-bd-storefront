@@ -8,10 +8,6 @@ export const CHANNEL_SLUG = "relief-care-bd";
 
 export const STORE_NAME = "Relief Care bd";
 
-// Left blank on purpose — fill in before launch. The WhatsApp button hides
-// itself rather than show a number that isn't real.
-export const WHATSAPP_NUMBER = ""; // e.g. "8801XXXXXXXXX"
-
 // Footer placeholders — generic, non-committal text until the real
 // operating details are supplied; edit before launch.
 export const STORE_HOURS = "সকাল ৯টা থেকে রাত ১০টা";

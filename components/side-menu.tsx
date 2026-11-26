@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { STORE_HOURS, WHATSAPP_NUMBER, type ChannelConfig, type PublicCategory, type SocialPlatform } from "@/lib/store";
+import { STORE_HOURS, type ChannelConfig, type PublicCategory, type SocialPlatform } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
+import { toWhatsappNumber } from "./whatsapp-widget";
 
 export const PLATFORM_META: Record<SocialPlatform, { label: string; color: string }> = {
   facebook: { label: "Facebook", color: "#1877F2" },
@@ -271,16 +272,14 @@ export function SideMenu({
                   <b className="num font-display text-2xl text-leaf-deep">{channel.customerCarePhone}</b>
                   <small className="text-xs text-muted">প্রতিদিন {STORE_HOURS}</small>
                   <div className="mt-1 grid grid-cols-2 gap-2">
-                    {WHATSAPP_NUMBER && (
-                      <a
-                        href={`https://wa.me/${WHATSAPP_NUMBER}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-lg border border-leaf py-2 text-center text-sm font-semibold text-leaf-deep"
-                      >
-                        হোয়াটসঅ্যাপ
-                      </a>
-                    )}
+                    <a
+                      href={`https://wa.me/${toWhatsappNumber(channel.customerCarePhone)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-lg border border-leaf py-2 text-center text-sm font-semibold text-leaf-deep"
+                    >
+                      হোয়াটসঅ্যাপ
+                    </a>
                     <button
                       type="button"
                       onClick={copyPhone}

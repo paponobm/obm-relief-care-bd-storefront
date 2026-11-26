@@ -17,11 +17,13 @@ export function ProductDetailGrid({
   category,
   origin,
   discount,
+  customerCarePhone,
 }: {
   product: PublicProduct;
   category: { name: string } | null;
   origin: string | null;
   discount: number;
+  customerCarePhone: string | null;
 }) {
   const [variantImage, setVariantImage] = useState<string | null>(null);
 
@@ -67,6 +69,7 @@ export function ProductDetailGrid({
         {product.slogan && <p className="text-base text-muted">{product.slogan}</p>}
         <AddToCart
           product={product}
+          customerCarePhone={customerCarePhone}
           onVariantChange={(v) => setVariantImage(v?.imageUrl ?? null)}
         />
       </div>

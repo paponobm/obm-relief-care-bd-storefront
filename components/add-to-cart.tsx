@@ -3,15 +3,22 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { qtyDiscountRate, useCart } from "@/lib/cart";
-import { WHATSAPP_NUMBER, type PublicProduct, type ProductVariantOption } from "@/lib/store";
+import { type PublicProduct, type ProductVariantOption } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 import { bnTaka } from "./product-deal-card";
+import { toWhatsappNumber } from "./whatsapp-widget";
 
 export function AddToCart({
   product,
+  customerCarePhone,
   onVariantChange,
 }: {
   product: PublicProduct;
+  // Settings → Social & Contact's Customer care number — same source the
+  // footer/side menu/floating widget already use. Null until the admin sets
+  // one, in which case this button stays a plain, non-navigating element
+  // (see below) rather than linking to a fake/broken wa.me URL.
+  customerCarePhone: string | null;
   // Notifies a parent that only needs to know which variant is picked —
   // e.g. the product gallery/quick-view swapping its main image to that
   // variant's own photo — without taking over this component's own
@@ -197,12 +204,12 @@ export function AddToCart({
       </div>
 
       <a
-        // No real WhatsApp number is configured yet (lib/store.ts) — this
-        // stays a plain, non-navigating UI element (no href) until one is
-        // added, rather than linking to a fake/broken wa.me URL.
-        {...(WHATSAPP_NUMBER
+        // No customer care number is set yet (Settings → Social & Contact)
+        // — this stays a plain, non-navigating UI element (no href) until
+        // one is added, rather than linking to a fake/broken wa.me URL.
+        {...(customerCarePhone
           ? {
-              href: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`এই পণ্যটি নিয়ে জানতে চাই: ${product.name}`)}`,
+              href: `https://wa.me/${toWhatsappNumber(customerCarePhone)}?text=${encodeURIComponent(`এই পণ্যটি নিয়ে জানতে চাই: ${product.name}`)}`,
               target: "_blank",
               rel: "noopener noreferrer",
             }

@@ -51,7 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               logoUrl={channel.logoUrl}
               customerCarePhone={channel.customerCarePhone}
             />
-            <QuickViewModal />
+            <QuickViewModal customerCarePhone={channel.customerCarePhone} />
             <ToastHost />
           </CartProvider>
         </ThemeProvider>

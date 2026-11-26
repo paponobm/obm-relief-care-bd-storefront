@@ -14,7 +14,7 @@ import type { PublicProduct } from "@/lib/store";
 // between. Same product object the card already had (list endpoints already
 // return everything AddToCart needs — price, variants, specs, stock), so
 // opening this never costs an extra fetch.
-export function QuickViewModal() {
+export function QuickViewModal({ customerCarePhone }: { customerCarePhone: string | null }) {
   const [product, setProduct] = useState<PublicProduct | null>(null);
   // Defaults to the product's own thumbnail; AddToCart's onVariantChange
   // below swaps it to whichever variant is picked (when that variant has
@@ -119,6 +119,7 @@ export function QuickViewModal() {
 
           <AddToCart
             product={product}
+            customerCarePhone={customerCarePhone}
             onVariantChange={(v) => setActiveImage(v?.imageUrl || product.thumbnailUrl)}
           />
 

@@ -3,7 +3,7 @@ import { BundleWith } from "@/components/bundle-with";
 import { ProductDetailGrid } from "@/components/product-detail-grid";
 import { Reviews } from "@/components/reviews";
 import { TrackView } from "@/components/track-view";
-import { getProduct, getProducts, getReviews } from "@/lib/store";
+import { getChannelConfig, getProduct, getProducts, getReviews } from "@/lib/store";
 import { importCountry } from "@/components/product-deal-card";
 import { COMPLEMENT } from "@/lib/quiz-data";
 
@@ -35,11 +35,21 @@ export default async function ProductPage({ params }: { params: { slug: string }
       ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
       : 0;
   const origin = importCountry(product);
+  // Same request the root layout already makes for the footer/side menu/
+  // floating widget — Next.js dedupes identical fetches within one render,
+  // so this doesn't cost a second network round trip.
+  const channel = await getChannelConfig().catch(() => null);
 
   return (
     <div className="flex flex-col gap-6">
       <TrackView slug={product.slug} />
-      <ProductDetailGrid product={product} category={category} origin={origin} discount={discount} />
+      <ProductDetailGrid
+        product={product}
+        category={category}
+        origin={origin}
+        discount={discount}
+        customerCarePhone={channel?.customerCarePhone ?? null}
+      />
 
       <BundleWith product={product} related={related} />
 
