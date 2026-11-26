@@ -66,7 +66,6 @@ export function AddToCart({
     compareAtPrice && compareAtPrice > price
       ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
       : 0;
-  const inStock = selected ? selected.inStock : product.inStock;
 
   const specBullets = (product.specifications ?? []).filter(
     (s) => !/origin|country|import|দেশ|আমদানি/i.test(s.key) && s.value.trim(),
