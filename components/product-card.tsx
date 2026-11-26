@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ProductArt } from "./product-art";
 import type { PublicProduct } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
@@ -82,16 +81,19 @@ const country = importCountry(product);
         {product.hasVariants ? (
           // Outlined, not filled — deliberately distinct from the solid
           // green add-to-cart button (MiniAddToCart) below, since picking a
-          // variant isn't a one-tap add.
-          <Link
-            href={`/product/${product.slug}`}
-            className="block w-full rounded-lg border border-leaf bg-transparent py-1.5 text-center text-md font-semibold text-leaf"
+          // variant isn't a one-tap add. Opens the same quick-view modal the
+          // image/name do (not a direct navigation) — picking a variant
+          // happens there, and that modal's own "বিস্তারিত দেখুন" is what
+          // goes to the full product page, same as any other product.
+          <QuickViewTrigger
+            product={product}
+            className="block w-full select-none rounded-lg border border-leaf bg-transparent py-1.5 text-center text-md font-semibold text-leaf"
           >
             {product.variantOptionLabel
               ? `${bn(product.variantCount ?? 0)}টি ${product.variantOptionLabel}`
               : "ভ্যারিয়েন্ট"}{" "}
             · বাছুন
-          </Link>
+          </QuickViewTrigger>
         ) : (
           <MiniAddToCart product={product} />
         )}

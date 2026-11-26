@@ -40,7 +40,7 @@ export function HelpCards() {
           </svg>
         </span>
         <span className="flex-1">
-          <b className="font-display block text-xl text-amber-deep">ফ্রি কল-পরামরশ নিন</b>
+          <b className="font-display block text-xl text-amber-deep">ফ্রি কল-পরামর্শ নিন</b>
           <span className="block text-sm text-muted">সমস্যা লিখুন, আমাদের অভিজ্ঞ প্রতিনিধি কল করে সঠিক পণ্য বলে দেবেন</span>
         </span>
         <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-amber-deep">কল চাই →</span>
