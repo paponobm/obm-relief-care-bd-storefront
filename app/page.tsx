@@ -26,8 +26,8 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-4">
       <HeroBanner
-        defaultTitle="ব্যথা, চুলকানি, সর্দি থেকে দ্রুত আরাম"
-        defaultDescription="বিশ্বস্ত ব্র্যান্ডের আসল পণ্য। পণ্য হাতে পেয়ে টাকা দিন, সারা বাংলাদেশে হোম ডেলিভারি।"
+        defaultTitle=""
+        defaultDescription=""
         defaultCoupon={channel?.heroCoupon ?? null}
         slides={channel?.heroSlides ?? []}
       />

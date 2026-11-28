@@ -39,8 +39,7 @@ export function Footer({
         <div className="flex flex-col gap-2">
           <b className="font-display text-amber font-bold text-2xl ">{STORE_NAME}</b>
           <p className="text-white">
-            ব্যথা, চুলকানি, সর্দি, ত্বক ও পরিবারের যত্নের আসল পণ্য এক জায়গায়। পণ্য হাতে পেয়ে টাকা দিন, সারা
-            বাংলাদেশে হোম ডেলিভারি।
+           
           </p>
         </div>
 
