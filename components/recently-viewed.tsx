@@ -84,7 +84,7 @@ export function RecentlyViewed() {
     let cancelled = false;
     Promise.all(slugs.map((slug) => getProduct(slug).catch(() => null))).then((results) => {
       if (!cancelled) {
-        setItems(results.filter((p): p is PublicProduct => p !== null));
+        setItems(results.filter((p): p is NonNullable<typeof p> => p !== null));
         setLoading(false);
       }
     });

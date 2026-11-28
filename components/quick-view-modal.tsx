@@ -31,6 +31,18 @@ export function QuickViewModal({ customerCarePhone }: { customerCarePhone: strin
     return () => window.removeEventListener("relief-care:quick-view", onQuickView);
   }, []);
 
+  useEffect(() => {
+    // Fired by AddToCart's "এখনই কিনুন" (Buy Now) just before it navigates
+    // to /checkout — this modal otherwise stays mounted/visible on top of
+    // the new page, since it lives in the root layout and never unmounts
+    // on its own across a route change.
+    function onClose() {
+      setProduct(null);
+    }
+    window.addEventListener("relief-care:close-quick-view", onClose);
+    return () => window.removeEventListener("relief-care:close-quick-view", onClose);
+  }, []);
+
   // Background stays put behind the drawer elsewhere on this site, but a
   // centered preview reads better pinned in place while it's open.
   useEffect(() => {

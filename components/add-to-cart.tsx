@@ -91,6 +91,12 @@ export function AddToCart({
 
   function handleBuyNow() {
     add(toCartItem(), qty);
+    // No-op when this isn't rendered inside QuickViewModal (e.g. the full
+    // product page) — only that modal listens for it. Without this, the
+    // modal stays mounted and visible on top of /checkout after the
+    // navigation below, since it lives in the root layout and never
+    // unmounts on its own across a route change.
+    window.dispatchEvent(new Event("relief-care:close-quick-view"));
     router.push("/checkout");
   }
 

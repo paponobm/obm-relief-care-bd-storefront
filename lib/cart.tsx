@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { QuantityDiscount } from "./store";
+import { trackAddToCart } from "./track";
 
 export interface CartItem {
   productId: string;
@@ -165,7 +166,13 @@ export function CartProvider({
       persist(next);
       return next;
     });
-    if (!options?.silent) toast("কার্টে যোগ হয়েছে");
+    if (!options?.silent) {
+      toast("কার্টে যোগ হয়েছে");
+      // Not fired for a silent add (e.g. ComboBuilder re-applying its own
+      // items on edit) — that's an implementation detail, not a real
+      // add-to-cart action by the visitor.
+      trackAddToCart(window.location.pathname, item.productId);
+    }
   }
 
   function setQuantity(

@@ -7,12 +7,39 @@ import { Footer } from "@/components/footer";
 import { WhatsappWidget } from "@/components/whatsapp-widget";
 import { QuickViewModal } from "@/components/quick-view-modal";
 import { ToastHost } from "@/components/toast-host";
+import { RouteTracker } from "@/components/route-tracker";
 import { getCategories, getChannelConfig, STORE_NAME } from "@/lib/store";
+import { SITE_URL } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: STORE_NAME,
-  description: `Shop at ${STORE_NAME} — ব্যথা, চুলকানি, সর্দি থেকে দ্রুত আরামের আসল পণ্য`,
-};
+const DEFAULT_DESCRIPTION = `Shop at ${STORE_NAME} — ব্যথা, চুলকানি, সর্দি থেকে দ্রুত আরামের আসল পণ্য`;
+
+export async function generateMetadata(): Promise<Metadata> {
+  // Same request RootLayout below makes for the header/footer logo — Next
+  // dedupes identical fetches within one render, so this isn't a second
+  // network round trip. Falls back to no custom icon (Next's default) if
+  // the admin hasn't set a logo yet or the API is briefly unreachable.
+  const channel = await getChannelConfig().catch(() => ({ logoUrl: null }));
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: STORE_NAME, template: `%s | ${STORE_NAME}` },
+    description: DEFAULT_DESCRIPTION,
+    icons: channel.logoUrl
+      ? { icon: channel.logoUrl, shortcut: channel.logoUrl, apple: channel.logoUrl }
+      : undefined,
+    openGraph: {
+      type: "website",
+      siteName: STORE_NAME,
+      title: STORE_NAME,
+      description: DEFAULT_DESCRIPTION,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: STORE_NAME,
+      description: DEFAULT_DESCRIPTION,
+    },
+  };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Falls back to the hardcoded name + no logo if the API is briefly
@@ -53,6 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             />
             <QuickViewModal customerCarePhone={channel.customerCarePhone} />
             <ToastHost />
+            <RouteTracker />
           </CartProvider>
         </ThemeProvider>
       </body>

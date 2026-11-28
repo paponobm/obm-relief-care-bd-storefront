@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
+import { trackSearch } from "@/lib/track";
 import type { ChannelConfig, PublicCategory } from "@/lib/store";
 import { ThemeToggle } from "./theme-toggle";
 import { SideMenu } from "./side-menu";
@@ -30,6 +31,7 @@ export function Header({ channel, categories }: { channel: ChannelConfig; catego
 
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
+    if (q.trim()) trackSearch("/products", q.trim());
     router.push(q.trim() ? `/products?search=${encodeURIComponent(q.trim())}` : "/products");
   }
 

@@ -169,6 +169,16 @@ export interface PublicProduct {
   variants?: ProductVariantOption[];
 }
 
+// getProduct (single product by slug) returns these extra SEO fields on top
+// of PublicProduct — the admin's per-channel SEO-tab override if set, else
+// the master product's own SEO-tab fields, resolved server-side. List
+// endpoints (getProducts, flash sale, etc.) don't include these.
+export interface PublicProductDetail extends PublicProduct {
+  seoTitle: string | null;
+  seoDescription: string | null;
+  focusKeywords: string[] | null;
+}
+
 export interface ProductVariantOption {
   id: string;
   label: string | null;
@@ -292,7 +302,7 @@ export function getProducts(
 }
 
 export function getProduct(slug: string) {
-  return getJson<PublicProduct>(`/products/${slug}`);
+  return getJson<PublicProductDetail>(`/products/${slug}`);
 }
 
 // The price-filter slider's own "lowest to highest" bounds — the real

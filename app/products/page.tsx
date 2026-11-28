@@ -1,15 +1,37 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductsGrid } from "@/components/products-grid";
 import { PriceRangeSlider } from "@/components/price-range-slider";
 import { getCategories, getPriceBounds, getProducts } from "@/lib/store";
+import { absoluteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductsPage({
-  searchParams,
-}: {
+type ProductsPageProps = {
   searchParams: { category?: string; search?: string; minPrice?: string; maxPrice?: string };
-}) {
+};
+
+export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
+  if (searchParams.search) {
+    // Search-result pages are low-value, near-duplicate content for crawlers
+    // (same catalog, infinite query variations) — keep them out of the index
+    // rather than let them compete with the canonical /products listing.
+    return { title: `"${searchParams.search}" এর ফলাফল`, robots: { index: false, follow: true } };
+  }
+  if (searchParams.category) {
+    const categories = await getCategories().catch(() => []);
+    const category = categories.find((c) => c.id === searchParams.category);
+    if (category) {
+      return {
+        title: category.name,
+        alternates: { canonical: absoluteUrl(`/products?category=${category.id}`) },
+      };
+    }
+  }
+  return { title: "সব পণ্য", alternates: { canonical: absoluteUrl("/products") } };
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const minPrice = searchParams.minPrice ? Number(searchParams.minPrice) : undefined;
   const maxPrice = searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined;
   const [categories, result, priceBounds] = await Promise.all([
