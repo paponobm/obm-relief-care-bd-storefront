@@ -8,20 +8,31 @@ import { API_URL, CHANNEL_SLUG } from "./store";
 const SESSION_KEY = "relief-care-analytics-session";
 const UTM_KEY = "relief-care-analytics-utm";
 
+// crypto.randomUUID() only exists in secure contexts (HTTPS, or localhost)
+// — this storefront is also served over plain HTTP, where it's undefined,
+// which previously threw here and silently killed every tracking call
+// before fetch() ever ran (see send()'s own catch-all below).
+function randomId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 // Anonymous, per-browser — never tied to a real Customer record. Lets
 // "unique visitors" be counted as distinct ids, not just raw page views.
 function getSessionId(): string {
   try {
     let id = localStorage.getItem(SESSION_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = randomId();
       localStorage.setItem(SESSION_KEY, id);
     }
     return id;
   } catch {
     // Storage unavailable (private mode) — a fresh id per call still lets
     // this page's own events through, just without cross-page dedup.
-    return crypto.randomUUID();
+    return randomId();
   }
 }
 
