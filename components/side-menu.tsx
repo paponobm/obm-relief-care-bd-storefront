@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { STORE_HOURS, type ChannelConfig, type PublicCategory, type SocialPlatform } from "@/lib/store";
 import { bn } from "@/lib/bn-digits";
 import { toWhatsappNumber } from "./whatsapp-widget";
+import { CallRequestModal } from "./call-request-modal";
 
 export const PLATFORM_META: Record<SocialPlatform, { label: string; color: string }> = {
   facebook: { label: "Facebook", color: "#1877F2" },
@@ -53,12 +55,21 @@ function MenuRow({
     </>
   );
   const rowClass = "flex w-full items-center gap-3 border-b border-line py-2.5 text-left last:border-b-0";
-  if (!href) return <div className={`${rowClass} cursor-default`}>{inner}</div>;
-  return (
-    <Link href={href} onClick={onClick} className={rowClass}>
-      {inner}
-    </Link>
-  );
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} className={rowClass}>
+        {inner}
+      </Link>
+    );
+  }
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={rowClass}>
+        {inner}
+      </button>
+    );
+  }
+  return <div className={`${rowClass} cursor-default`}>{inner}</div>;
 }
 
 function CategoryIcon({ category }: { category: PublicCategory }) {
@@ -86,7 +97,24 @@ export function SideMenu({
 }) {
   const [tab, setTab] = useState<"menu" | "categories">("menu");
   const [copied, setCopied] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
   const combo = channel.comboBanners[0];
+  const pathname = usePathname();
+
+  // Link's own hash-scroll only reliably happens on a fresh navigation —
+  // clicking these while already on "/" (the common case, since this menu
+  // opens from every page via the header) wouldn't otherwise move the
+  // page at all. Scrolling manually here covers that same-page case while
+  // leaving normal navigation (and its scroll) untouched from other pages.
+  function goToSection(e: React.MouseEvent, id: string) {
+    onClose();
+    if (pathname === "/") {
+      e.preventDefault();
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
 
   async function copyPhone() {
     if (!channel.customerCarePhone) return;
@@ -101,6 +129,13 @@ export function SideMenu({
 
   return ( //font-bold block text-xl leading-none text-leaf-deep
     <>
+      {callOpen && (
+        <CallRequestModal
+          onClose={() => setCallOpen(false)}
+          storeName={channel.name}
+          customerCarePhone={channel.customerCarePhone}
+        />
+      )}
       <div
         onClick={onClose}
         aria-hidden
@@ -171,7 +206,7 @@ export function SideMenu({
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   href="/#flash-deal"
-                  onClick={onClose}
+                  onClick={(e) => goToSection(e, "flash-deal")}
                   className="flex flex-col items-start gap-2 rounded-xl border border-line bg-bg p-3 text-sm font-semibold text-ink"
                 >
                   <QuickIcon bg="#D9442F">
@@ -211,7 +246,7 @@ export function SideMenu({
                 </Link>
                 <Link
                   href="/#customer-reviews"
-                  onClick={onClose}
+                  onClick={(e) => goToSection(e, "customer-reviews")}
                   className="flex flex-col items-start gap-2 rounded-xl border border-line bg-bg p-3 text-sm font-semibold text-ink"
                 >
                   <QuickIcon bg="#2F7FB8">
@@ -235,6 +270,10 @@ export function SideMenu({
                   }
                   title="ফ্রি কল-পরামর্শ"
                   subtitle="প্রতিনিধি কল করে পণ্য বাছাই করে দেবেন"
+                  onClick={() => {
+                    onClose();
+                    setCallOpen(true);
+                  }}
                 />
                 <MenuRow
                   iconBg="var(--leaf-soft)"
